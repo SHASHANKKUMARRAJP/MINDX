@@ -75,7 +75,7 @@ const MODULE_SHOWCASE = [
 
 const STATS = [
   { label: 'Multimodal Engines', value: '4 Core' },
-  { label: 'Latency Speed', value: '< 2.5s' },
+  { label: 'Latency Speed', value: '< 60s' },
   { label: 'Supported Inputs', value: 'Image / Code / Repo / Text' },
   { label: 'Live Sandbox', value: '100% Standalone' }
 ]
