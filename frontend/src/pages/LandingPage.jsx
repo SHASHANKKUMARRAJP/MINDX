@@ -74,10 +74,50 @@ const MODULE_SHOWCASE = [
 ]
 
 const STATS = [
-  { label: 'Multimodal Engines', value: '4 Core' },
-  { label: 'Latency Speed', value: '< 60s' },
-  { label: 'Supported Inputs', value: 'Image / Code / Repo / Text' },
-  { label: 'Live Sandbox', value: '92% Standalone' }
+  {
+    icon: (
+      <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-2 mx-auto">
+        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      </div>
+    ),
+    value: '4 Core',
+    label: 'MULTIMODAL ENGINES'
+  },
+  {
+    icon: (
+      <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-2 mx-auto">
+        <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+    ),
+    value: '< 60s',
+    label: 'LATENCY SPEED'
+  },
+  {
+    icon: (
+      <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center mb-2 mx-auto">
+        <svg className="w-5 h-5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+    ),
+    value: 'Image / Code / Repo / Text',
+    label: 'SUPPORTED INPUTS'
+  },
+  {
+    icon: (
+      <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-2 mx-auto">
+        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+    ),
+    value: '92% Standalone',
+    label: 'LIVE SANDBOX'
+  }
 ]
 
 export default function LandingPage() {
@@ -85,71 +125,150 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('reality')
 
   return (
-    <div className="relative z-10 max-w-7xl mx-auto px-6 py-10 font-inter">
-      {/* ── HERO SECTION ── */}
-      <div className="text-center max-w-4xl mx-auto mb-16 pt-4">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }} 
-          animate={{ opacity: 1, scale: 1 }} 
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 glass px-5 py-2 rounded-full mb-6 border border-cyan-500/30"
-        >
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="text-xs sm:text-sm font-outfit font-semibold tracking-wide bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
-            Multimodal Intelligence & Digital Experience
-          </span>
-        </motion.div>
-
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-outfit font-900 text-6xl sm:text-7xl md:text-8xl tracking-tight leading-none mb-6"
-        >
-          <span className="text-gradient-full">MINDX NEXUS</span>
-          <br />
-          <span className="text-white/90 text-4xl sm:text-6xl md:text-7xl font-700">Give AI Anything.</span>
-        </motion.h1>
-
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-white/60 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed mb-10 font-outfit"
-        >
-          The next-generation multimodal workspace. Scan physical reality, clone &amp; generate web apps from GitHub, build 3D knowledge graphs, and verify truth with deep multimodal intelligence.
-        </motion.p>
-
-        {/* CTA Buttons */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
-        >
-          <button
-            onClick={() => navigate('/home')}
-            className="btn-nexus px-8 py-4 text-lg font-outfit font-700 flex items-center gap-3 w-full sm:w-auto justify-center shadow-2xl shadow-cyan-500/20"
+    <div className="relative z-10 max-w-7xl mx-auto px-6 py-8 font-inter">
+      {/* ── HERO SECTION (2-COLUMN SPLIT WITH GLOBL HOLOGRAPHIC ORBIT) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16 pt-2">
+        {/* Left Column: Text & Primary CTAs */}
+        <div className="lg:col-span-7 space-y-6 text-left">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full border border-cyan-500/30"
           >
-            <span>✦ Launch Multimodal Workspace</span>
-            <span>→</span>
-          </button>
-          <button
-            onClick={() => navigate('/builder')}
-            className="glass px-8 py-4 rounded-xl text-lg font-outfit font-600 text-white/80 hover:text-white border border-white/10 hover:border-purple-400/40 transition-all w-full sm:w-auto text-center"
-          >
-            <span>◈ Build App from GitHub</span>
-          </button>
-        </motion.div>
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-xs sm:text-sm font-outfit font-semibold tracking-wide bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
+              Multimodal Intelligence &amp; Digital Experience
+            </span>
+          </motion.div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 glass rounded-2xl border border-white/10">
-          {STATS.map((stat, i) => (
-            <div key={i} className="text-center p-2">
-              <div className="font-outfit font-800 text-2xl sm:text-3xl text-gradient-cyan mb-1">{stat.value}</div>
-              <div className="text-xs text-white/40 font-outfit uppercase tracking-wider">{stat.label}</div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-outfit font-900 text-5xl sm:text-7xl lg:text-7xl tracking-tight leading-tight"
+          >
+            <span className="text-gradient-full">MINDX NEXUS</span>
+            <br />
+            <span className="text-white/95 text-3xl sm:text-5xl lg:text-6xl font-700">Give AI Anything.</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-white/60 text-base sm:text-lg leading-relaxed font-outfit max-w-2xl"
+          >
+            The next-generation multimodal workspace. Scan physical reality, clone &amp; generate web apps from GitHub, build 3D knowledge graphs, and verify truth with deep multimodal intelligence.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center gap-4 pt-2"
+          >
+            <button
+              onClick={() => navigate('/home')}
+              className="btn-nexus px-7 py-3.5 text-base font-outfit font-700 flex items-center gap-2.5 w-full sm:w-auto justify-center shadow-xl shadow-cyan-500/20"
+            >
+              <span>🚀 Launch Multimodal Workspace</span>
+              <span>→</span>
+            </button>
+            <button
+              onClick={() => navigate('/builder')}
+              className="glass px-7 py-3.5 rounded-xl text-base font-outfit font-600 text-white/80 hover:text-white border border-white/10 hover:border-purple-400/40 transition-all w-full sm:w-auto text-center flex items-center gap-2 justify-center"
+            >
+              <svg className="w-5 h-5 text-white/70" fill="currentColor" viewBox="0 0 24 24">
+                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+              </svg>
+              <span>Build App from GitHub</span>
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Right Column: 3D Holographic Globe with Orbiting Badges */}
+        <div className="lg:col-span-5 relative">
+          <div className="relative w-full h-[340px] sm:h-[400px] flex items-center justify-center">
+            {/* Concentric rotating orbit rings */}
+            <div className="absolute w-[300px] h-[300px] rounded-full border border-cyan-500/20 animate-spin-slow" style={{ animationDuration: '35s' }} />
+            <div className="absolute w-[240px] h-[240px] rounded-full border border-purple-500/30 animate-spin-slow" style={{ animationDuration: '22s', animationDirection: 'reverse' }} />
+            <div className="absolute w-[180px] h-[180px] rounded-full border border-pink-500/20" />
+
+            {/* Central Holographic Sphere */}
+            <div className="relative w-[160px] h-[160px] rounded-full bg-gradient-to-br from-cyan-500/25 via-purple-600/35 to-pink-500/25 border border-cyan-400/50 shadow-[0_0_90px_rgba(0,212,255,0.3)] flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.2)_0,transparent_70%)]" />
+              <svg className="w-full h-full opacity-50 text-cyan-300" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.6" strokeDasharray="2 2" />
+                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="currentColor" strokeWidth="0.6" />
+                <ellipse cx="50" cy="50" rx="18" ry="45" fill="none" stroke="currentColor" strokeWidth="0.6" />
+                <line x1="5" y1="50" x2="95" y2="50" stroke="currentColor" strokeWidth="0.6" />
+                <line x1="50" y1="5" x2="50" y2="95" stroke="currentColor" strokeWidth="0.6" />
+              </svg>
             </div>
-          ))}
+
+            {/* Pinned Orbital Badges (as seen in photo) */}
+            {/* Top Right: Scan */}
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute top-[12%] right-[8%] glass px-3.5 py-1.5 rounded-full border border-cyan-400/40 text-xs font-outfit font-semibold text-cyan-300 flex items-center gap-1.5 bg-black/70 shadow-lg shadow-cyan-500/20 backdrop-blur-md"
+            >
+              <span className="text-[10px]">◇</span>
+              <span>Scan</span>
+            </motion.div>
+
+            {/* Middle Left: Understand */}
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              className="absolute top-[32%] left-[2%] glass px-3.5 py-1.5 rounded-full border border-cyan-400/40 text-xs font-outfit font-semibold text-cyan-300 flex items-center gap-1.5 bg-black/70 shadow-lg shadow-cyan-500/20 backdrop-blur-md"
+            >
+              <span className="text-[10px]">✦</span>
+              <span>Understand</span>
+            </motion.div>
+
+            {/* Middle Right: Build */}
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              className="absolute top-[48%] right-[6%] glass px-3.5 py-1.5 rounded-full border border-purple-400/40 text-xs font-outfit font-semibold text-purple-300 flex items-center gap-1.5 bg-black/70 shadow-lg shadow-purple-500/20 backdrop-blur-md"
+            >
+              <span className="text-[10px]">◈</span>
+              <span>Build</span>
+            </motion.div>
+
+            {/* Bottom Right: Verify */}
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+              className="absolute bottom-[16%] right-[24%] glass px-3.5 py-1.5 rounded-full border border-pink-400/40 text-xs font-outfit font-semibold text-pink-300 flex items-center gap-1.5 bg-black/70 shadow-lg shadow-pink-500/20 backdrop-blur-md"
+            >
+              <span className="text-[10px]">✦</span>
+              <span>Verify</span>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── STATS CARDS ROW (4 GLASS CARDS WITH TOP ICONS) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 p-5 glass rounded-2xl border border-white/10 mb-16 items-center">
+        {STATS.map((stat, i) => (
+          <div key={i} className="glass p-4 rounded-xl border border-white/10 text-center hover:border-cyan-500/30 transition-all group">
+            {stat.icon}
+            <div className="font-outfit font-800 text-xl sm:text-2xl text-gradient-cyan mb-1 group-hover:scale-105 transition-transform">{stat.value}</div>
+            <div className="text-[11px] text-white/40 font-outfit font-600 uppercase tracking-wider">{stat.label}</div>
+          </div>
+        ))}
+        {/* 5th Column Note */}
+        <div className="col-span-2 lg:col-span-1 text-center lg:text-left p-3">
+          <p className="font-outfit font-700 text-sm text-white/80 leading-snug">
+            One Workspace
+          </p>
+          <p className="font-outfit text-xs text-cyan-400 font-500">
+            Infinite Possibilities
+          </p>
         </div>
       </div>
 
