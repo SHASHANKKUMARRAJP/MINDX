@@ -428,7 +428,7 @@ export default function Notebook() {
       </AnimatePresence>
 
       {/* ─── Main workspace 3-panel layout ──────────────────────── */}
-      <div style={{
+      <div className="notebook-workspace-grid" style={{
         flex: 1, display: 'grid',
         gridTemplateColumns: '240px 1fr 300px',
         gridTemplateRows: '1fr',

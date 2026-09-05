@@ -411,9 +411,54 @@ body {
   background: rgba(0,212,255,0.08);
 }
 
-/* ── Responsive ────────────────────────────────────────────────── */
+/* ── Responsive & Mobile Security Rules ────────────────────────── */
+@media (max-width: 900px) {
+  .notebook-workspace-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    min-height: calc(100vh - 120px) !important;
+    height: auto !important;
+  }
+
+  .notebook-workspace-grid > div {
+    min-height: 280px !important;
+    border-right: none !important;
+    border-left: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
 @media (max-width: 768px) {
   .nexus-grid {
     background-size: 40px 40px;
   }
+
+  h1 {
+    font-size: 1.85rem !important;
+    line-height: 1.25 !important;
+  }
+
+  h2 {
+    font-size: 1.4rem !important;
+  }
+
+  .btn-nexus {
+    padding: 0.65rem 1.4rem !important;
+    font-size: 0.88rem !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .glass {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+
+  /* Touch optimizations */
+  button, input, select, textarea, a {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
 }
+
