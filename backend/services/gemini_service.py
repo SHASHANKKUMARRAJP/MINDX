@@ -407,6 +407,53 @@ def _clean_reality_objects(raw_objects: list) -> list:
     return clean_objects
 
 
+def _clean_reality_labels(raw_labels: list) -> list:
+    """Sanitize and format detected labels."""
+    clean_labels = []
+    for lbl in raw_labels or []:
+        if isinstance(lbl, dict) and lbl.get("name"):
+            try:
+                score_val = int(lbl.get("score") or 85)
+            except (ValueError, TypeError):
+                score_val = 85
+            clean_labels.append({
+                "name": str(lbl.get("name")),
+                "score": min(max(score_val, 10), 99),
+                "category": str(lbl.get("category") or "General")
+            })
+    return clean_labels
+
+
+def _clean_reality_micros(raw_micros: list) -> list:
+    """Sanitize micro features detection results."""
+    clean_micros = []
+    for m in raw_micros or []:
+        if isinstance(m, dict) and m.get("name"):
+            try:
+                score_val = int(m.get("score") or 88)
+            except (ValueError, TypeError):
+                score_val = 88
+            clean_micros.append({
+                "name": str(m.get("name")),
+                "score": min(max(score_val, 10), 99),
+                "category": str(m.get("category") or "Feature")
+            })
+    return clean_micros
+
+
+def _clean_reality_colors(raw_colors: list) -> list:
+    """Sanitize dominant colors palette."""
+    clean_colors = []
+    for c in raw_colors or []:
+        if isinstance(c, dict) and c.get("hex"):
+            clean_colors.append({
+                "hex": str(c.get("hex")),
+                "name": str(c.get("name") or "Color"),
+                "percentage": int(c.get("percentage") or 20)
+            })
+    return clean_colors
+
+
 async def reality_scan(image_bytes: bytes, mime_type: str, prompt: str, mode: str = "general") -> dict:
     mode_instructions = {
         "general": "Exhaustively detect all primary objects, sub-objects, clothing items, facial ornaments (nose ring, earring, bindi), and background items.",
@@ -433,51 +480,17 @@ async def reality_scan(image_bytes: bytes, mime_type: str, prompt: str, mode: st
         return _fallback_reality_scan(prompt, mode)
 
     clean_objects = _clean_reality_objects(data.get("objects", []))
-
-    raw_labels = data.get("labels", [])
-    clean_labels = []
-    for lbl in raw_labels:
-        if isinstance(lbl, dict) and lbl.get("name"):
-            try:
-                score_val = int(lbl.get("score") or 85)
-            except (ValueError, TypeError):
-                score_val = 85
-            clean_labels.append({
-                "name": str(lbl.get("name")),
-                "score": min(max(score_val, 10), 99),
-                "category": str(lbl.get("category") or "General")
-            })
-
-    raw_micros = data.get("micro_features", [])
-    clean_micros = []
-    for m in raw_micros:
-        if isinstance(m, dict) and m.get("name"):
-            try:
-                score_val = int(m.get("score") or 88)
-            except (ValueError, TypeError):
-                score_val = 88
-            clean_micros.append({
-                "name": str(m.get("name")),
-                "score": min(max(score_val, 10), 99),
-                "category": str(m.get("category") or "Feature")
-            })
-
-    raw_colors = data.get("dominant_colors", [])
-    clean_colors = []
-    for c in raw_colors:
-        if isinstance(c, dict) and c.get("hex"):
-            clean_colors.append({
-                "hex": str(c.get("hex")),
-                "name": str(c.get("name") or "Color"),
-                "percentage": int(c.get("percentage") or 20)
-            })
+    clean_labels = _clean_reality_labels(data.get("labels", []))
+    clean_micros = _clean_reality_micros(data.get("micro_features", []))
+    clean_colors = _clean_reality_colors(data.get("dominant_colors", []))
 
     safe = data.get("safe_search") or {}
+    fallback_data = _fallback_reality_scan(prompt, mode)
 
     return {
-        "objects": clean_objects if clean_objects else _fallback_reality_scan(prompt, mode)["objects"],
-        "labels": clean_labels if clean_labels else _fallback_reality_scan(prompt, mode)["labels"],
-        "micro_features": clean_micros if clean_micros else _fallback_reality_scan(prompt, mode)["micro_features"],
+        "objects": clean_objects if clean_objects else fallback_data["objects"],
+        "labels": clean_labels if clean_labels else fallback_data["labels"],
+        "micro_features": clean_micros if clean_micros else fallback_data["micro_features"],
         "explanation": str(data.get("explanation") or data.get("overall_assessment") or "Detailed visual analysis complete."),
         "components": [str(c) for c in (data.get("components") or ["Focal Subject", "Environment"])],
         "issues": [str(i) for i in (data.get("issues") or ["No visual issues detected"])],

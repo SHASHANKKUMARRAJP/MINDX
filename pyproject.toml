@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mindx-nexus"
+version = "2.0.0"
+description = "AI Project Idea Generator, Code Builder & Multimodal Mentor for Final-Year Student Projects"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Shashank Kumar Rajp", email = "shashank@mindx-ai.org"}
+]
+keywords = ["ai", "gemini", "hackathon", "multimodal", "fastapi", "react", "knowledge-graph"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --cov=backend --cov-report=term-missing"
+testpaths = [
+    "tests",
+    "backend/tests"
+]
+python_files = ["test_*.py"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
