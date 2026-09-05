@@ -76,10 +76,18 @@ def _get_available_models():
 
 def _generate_with_fallback(contents, temperature: float = 0.2):
     """Fast model invocation prioritizing high-accuracy Gemini 2.0 Flash & 1.5 Pro models."""
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable is missing")
-    genai.configure(api_key=api_key)
+
+    # Validate key format
+    if not api_key.startswith("AIza"):
+        print(f"[Gemini Service Warning] GEMINI_API_KEY does not start with 'AIza'. Key may be invalid or session token.")
+
+    try:
+        genai.configure(api_key=api_key)
+    except Exception as e:
+        print(f"[Gemini Service Warning] genai.configure error: {e}")
 
     discovered = _get_available_models()
 
@@ -124,7 +132,7 @@ def _generate_with_fallback(contents, temperature: float = 0.2):
             except Exception as err2:
                 last_error = err2
 
-    raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
+    raise RuntimeError(f"API call failed (check GEMINI_API_KEY validity). Last error: {last_error}")
 
 
 
