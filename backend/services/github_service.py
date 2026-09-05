@@ -212,6 +212,68 @@ async def _fetch_via_direct_raw_probe(client: httpx.AsyncClient, owner: str, rep
     }
 
 
+def _file_priority(path: str) -> int:
+    base_lower = path.split("/")[-1].lower()
+    if base_lower in PRIORITY_FILENAMES:
+        return 0
+    if "readme" in base_lower:
+        return 0
+    if "/" not in path:
+        return 1
+    if path.startswith("src/") or path.startswith("lib/") or path.startswith("app/") or path.startswith("backend/"):
+        return 2
+    if path.endswith(".md") or path.endswith(".rst"):
+        return 3
+    return 4
+
+
+def _filter_and_sort_candidate_files(tree_items: list) -> list:
+    """Filter out binary/ignored files and sort candidate files by priority."""
+    candidate_files = []
+    for item in tree_items or []:
+        path = item.get("path", "")
+        size = item.get("size", 0)
+        if is_ignored_path(path) or is_secret_file(path) or is_binary_file(path):
+            continue
+        if size > MAX_SINGLE_FILE_BYTES:
+            continue
+        candidate_files.append(path)
+
+    candidate_files.sort(key=_file_priority)
+    return candidate_files[:MAX_TOTAL_FILES_FETCH]
+
+
+async def _download_selected_files(client: httpx.AsyncClient, owner: str, repo: str, default_branch: str, selected_files: list) -> List[Dict[str, str]]:
+    """Download raw contents of selected files."""
+    fetched_files: List[Dict[str, str]] = []
+    total_chars = 0
+
+    for file_path in selected_files:
+        if total_chars >= MAX_TOTAL_CHARS_CONTEXT:
+            break
+
+        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{file_path}"
+        try:
+            raw_res = await client.get(raw_url)
+            if raw_res.status_code == 200:
+                content_text = raw_res.text
+                if "BEGIN RSA PRIVATE KEY" in content_text or "BEGIN PRIVATE KEY" in content_text:
+                    continue
+                
+                max_chunk = min(15000, MAX_TOTAL_CHARS_CONTEXT - total_chars)
+                truncated_text = content_text[:max_chunk]
+                total_chars += len(truncated_text)
+
+                fetched_files.append({
+                    "filename": file_path,
+                    "content": truncated_text
+                })
+        except Exception as err:
+            print(f"[GitHub Service] Failed to fetch raw file '{file_path}': {err}")
+
+    return fetched_files
+
+
 async def fetch_github_repository(repo_url: str) -> Dict:
     """
     Fetch public repository metadata, file tree, README, dependencies, and core source files.
@@ -223,30 +285,16 @@ async def fetch_github_repository(repo_url: str) -> Dict:
         "Accept": "application/vnd.github.v3+json"
     }
 
-    # Optional GitHub Token from environment
     github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GITHUB_API_KEY")
     if github_token:
         headers["Authorization"] = f"token {github_token}"
         print(f"[GitHub Service] Using authenticated GitHub token header.")
 
     async with httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers=headers) as client:
-        # 1. Fetch Repository Metadata
         repo_api_url = f"https://api.github.com/repos/{owner}/{repo}"
         res = await client.get(repo_api_url)
 
-        if res.status_code == 404:
-            # Fallback to direct raw probe in case 404 is API obfuscation or rate limit
-            try:
-                return await _fetch_via_direct_raw_probe(client, owner, repo)
-            except Exception:
-                raise ValueError(f"GitHub repository '{owner}/{repo}' not found or is private. MINDX Nexus supports public GitHub repositories only.")
-
-        elif res.status_code == 403:
-            # Rate limit exceeded on REST API -> Use direct raw download fallback!
-            print(f"[GitHub Service] API 403 Rate Limit hit for '{owner}/{repo}'. Switching to direct raw file mode.")
-            return await _fetch_via_direct_raw_probe(client, owner, repo)
-
-        elif res.status_code != 200:
+        if res.status_code in (404, 403) or res.status_code != 200:
             return await _fetch_via_direct_raw_probe(client, owner, repo)
 
         repo_data = res.json()
@@ -259,7 +307,6 @@ async def fetch_github_repository(repo_url: str) -> Dict:
         forks = repo_data.get("forks_count", 0)
         language = repo_data.get("language") or "Unspecified"
 
-        # 2. Fetch Git Tree
         tree_api_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1"
         tree_res = await client.get(tree_api_url)
         
@@ -270,66 +317,11 @@ async def fetch_github_repository(repo_url: str) -> Dict:
 
         tree_str = build_tree_string(tree_items) if tree_items else "Directory tree unavailable"
 
-        # 3. Select key files to download
-        candidate_files = []
-        for item in tree_items:
-            path = item.get("path", "")
-            size = item.get("size", 0)
-
-            if is_ignored_path(path) or is_secret_file(path) or is_binary_file(path):
-                continue
-            if size > MAX_SINGLE_FILE_BYTES:
-                continue
-            candidate_files.append(path)
-
-        # Sort candidate files by priority
-        def file_priority(path: str) -> int:
-            base_lower = path.split("/")[-1].lower()
-            if base_lower in PRIORITY_FILENAMES:
-                return 0
-            if "readme" in base_lower:
-                return 0
-            if "/" not in path:  # root level files
-                return 1
-            if path.startswith("src/") or path.startswith("lib/") or path.startswith("app/") or path.startswith("backend/"):
-                return 2
-            if path.endswith(".md") or path.endswith(".rst"):
-                return 3
-            return 4
-
-        candidate_files.sort(key=file_priority)
-        selected_files = candidate_files[:MAX_TOTAL_FILES_FETCH]
-
+        selected_files = _filter_and_sort_candidate_files(tree_items)
         if not selected_files:
             return await _fetch_via_direct_raw_probe(client, owner, repo)
 
-        # 4. Raw contents download via raw.githubusercontent.com
-        fetched_files: List[Dict[str, str]] = []
-        total_chars = 0
-
-        for file_path in selected_files:
-            if total_chars >= MAX_TOTAL_CHARS_CONTEXT:
-                break
-
-            raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{file_path}"
-            try:
-                raw_res = await client.get(raw_url)
-                if raw_res.status_code == 200:
-                    content_text = raw_res.text
-                    if "BEGIN RSA PRIVATE KEY" in content_text or "BEGIN PRIVATE KEY" in content_text:
-                        continue
-                    
-                    max_chunk = min(15000, MAX_TOTAL_CHARS_CONTEXT - total_chars)
-                    truncated_text = content_text[:max_chunk]
-                    total_chars += len(truncated_text)
-
-                    fetched_files.append({
-                        "filename": file_path,
-                        "content": truncated_text
-                    })
-            except Exception as err:
-                print(f"[GitHub Service] Failed to fetch raw file '{file_path}': {err}")
-
+        fetched_files = await _download_selected_files(client, owner, repo, default_branch, selected_files)
         if not fetched_files:
             return await _fetch_via_direct_raw_probe(client, owner, repo)
 

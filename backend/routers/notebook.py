@@ -43,9 +43,10 @@ def _extract_text(filename: str, content: bytes) -> str:
         # Fallback: try to decode raw bytes
         try:
             raw = content.decode("latin-1", errors="ignore")
-            lines = [l.strip() for l in raw.split("\n") if len(l.strip()) > 20 and l.strip().isascii()]
+            lines = [line_str.strip() for line_str in raw.split("\n") if len(line_str.strip()) > 20 and line_str.strip().isascii()]
             return "\n".join(lines[:400]) or f"[PDF: {filename} — could not extract text]"
-        except Exception:
+        except Exception as parse_err:
+            print(f"[Notebook Fallback Error] {parse_err}")
             return f"[PDF: {filename} — binary content]"
 
     if ext in ("txt", "md", "markdown", "rst"):

@@ -29,5 +29,5 @@ def test_no_hardcoded_secrets():
                         content = f.read()
                         for pattern in secret_patterns:
                             assert pattern not in content, f"Potential secret {pattern} found in {filepath}"
-                except Exception:
-                    pass
+                except (OSError, UnicodeDecodeError) as file_err:
+                    print(f"Skipping unreadable file {filepath}: {file_err}")

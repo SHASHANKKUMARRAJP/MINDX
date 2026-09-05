@@ -136,19 +136,20 @@ def _generate_with_fallback(contents, temperature: float = 0.2):
 
 
 
-def _extract_json(text: str) -> dict:
+def _safe_json_parse(text: str) -> dict:
     """Extract JSON from a Gemini response with multi-level repair fallbacks."""
     if not text or not text.strip():
         return {}
 
     clean_text = re.sub(r"```(?:json)?\s*", "", text)
     clean_text = re.sub(r"```", "", clean_text).strip()
+    parse_logs = []
 
     # Strategy 1: Direct parse
     try:
         return json.loads(clean_text)
-    except Exception:
-        pass
+    except Exception as e1:
+        parse_logs.append(f"Direct parse failed: {e1}")
 
     # Strategy 2: Extract { ... } block
     match = re.search(r"\{.*\}", clean_text, re.DOTALL)
@@ -156,29 +157,31 @@ def _extract_json(text: str) -> dict:
         json_str = match.group(0)
         try:
             return json.loads(json_str)
-        except Exception:
+        except Exception as e2:
+            parse_logs.append(f"Block parse failed: {e2}")
             try:
                 fixed_str = re.sub(r",\s*([\}\]])", r"\1", json_str)
                 return json.loads(fixed_str)
-            except Exception:
-                pass
+            except Exception as e3:
+                parse_logs.append(f"Regex fix failed: {e3}")
 
     # Strategy 3: Python AST literal eval
     try:
         res = ast.literal_eval(clean_text)
         if isinstance(res, dict):
             return res
-    except Exception:
-        pass
+    except Exception as e4:
+        parse_logs.append(f"Literal eval failed: {e4}")
 
     if match:
         try:
             res = ast.literal_eval(match.group(0))
             if isinstance(res, dict):
                 return res
-        except Exception:
-            pass
+        except Exception as e5:
+            parse_logs.append(f"Match literal eval failed: {e5}")
 
+    print(f"[JSON Parse Notice] All parsing attempts exhausted: {parse_logs}")
     return {}
 
 
@@ -370,6 +373,39 @@ def _fallback_reality_scan(prompt: str, mode: str = "general") -> dict:
     }
 
 
+def _clean_reality_objects(raw_objects: list) -> list:
+    """Helper to sanitize and format object bounding boxes."""
+    clean_objects = []
+    for obj in raw_objects or []:
+        if not isinstance(obj, dict):
+            continue
+        bbox = obj.get("bounding_box")
+        clean_bbox = None
+        if isinstance(bbox, list) and len(bbox) == 4:
+            try:
+                vals = [float(v) for v in bbox]
+                if any(v > 100 for v in vals):
+                    vals = [v / 10.0 for v in vals]
+                clean_bbox = [round(min(max(v, 0.0), 100.0), 1) for v in vals]
+            except (ValueError, TypeError):
+                clean_bbox = None
+
+        try:
+            score_val = int(obj.get("score") or 90)
+        except (ValueError, TypeError):
+            score_val = 90
+
+        clean_objects.append({
+            "name": str(obj.get("name") or "Object"),
+            "description": str(obj.get("description") or ""),
+            "confidence": str(obj.get("confidence") or "High"),
+            "score": min(max(score_val, 10), 99),
+            "location": str(obj.get("location") or "Foreground"),
+            "bounding_box": clean_bbox
+        })
+    return clean_objects
+
+
 async def reality_scan(image_bytes: bytes, mime_type: str, prompt: str, mode: str = "general") -> dict:
     mode_instructions = {
         "general": "Exhaustively detect all primary objects, sub-objects, clothing items, facial ornaments (nose ring, earring, bindi), and background items.",
@@ -392,39 +428,10 @@ async def reality_scan(image_bytes: bytes, mime_type: str, prompt: str, mode: st
         print(f"[Reality Scan Error] Gemini call failed: {e}")
         return _fallback_reality_scan(prompt, mode)
 
-
     if not isinstance(data, dict):
         return _fallback_reality_scan(prompt, mode)
 
-    raw_objects = data.get("objects", [])
-    clean_objects = []
-    for obj in raw_objects:
-        if isinstance(obj, dict):
-            bbox = obj.get("bounding_box")
-            clean_bbox = None
-            if isinstance(bbox, list) and len(bbox) == 4:
-                try:
-                    vals = [float(v) for v in bbox]
-                    # If Gemini returned 0-1000 scale, convert to 0-100%
-                    if any(v > 100 for v in vals):
-                        vals = [v / 10.0 for v in vals]
-                    clean_bbox = [round(min(max(v, 0.0), 100.0), 1) for v in vals]
-                except (ValueError, TypeError):
-                    clean_bbox = None
-
-            try:
-                score_val = int(obj.get("score") or 90)
-            except (ValueError, TypeError):
-                score_val = 90
-
-            clean_objects.append({
-                "name": str(obj.get("name") or "Object"),
-                "description": str(obj.get("description") or ""),
-                "confidence": str(obj.get("confidence") or "High"),
-                "score": min(max(score_val, 10), 99),
-                "location": str(obj.get("location") or "Foreground"),
-                "bounding_box": clean_bbox
-            })
+    clean_objects = _clean_reality_objects(data.get("objects", []))
 
     raw_labels = data.get("labels", [])
     clean_labels = []
@@ -545,7 +552,7 @@ def _fallback_extract_knowledge(texts: list[str], filenames: list[str]) -> dict:
         node_ids.add(doc_id)
 
         # Extract meaningful lines
-        raw_lines = [l.strip() for l in text.split("\n") if len(l.strip()) > 5]
+        raw_lines = [line_str.strip() for line_str in text.split("\n") if len(line_str.strip()) > 5]
         valid_concepts = []
 
         for line in raw_lines:
@@ -1209,34 +1216,43 @@ def _generate_fallback_html(title: str, prompt: str) -> str:
 </html>"""
 
 
-def _build_fallback_app(prompt: str, history: Optional[list] = None) -> dict:
-    prompt_lower = prompt.lower()
-    
-    title = "Gemini Nexus Web App"
+def _get_fallback_app_title(prompt: str) -> str:
+    """Helper to determine app title from prompt keywords."""
+    prompt_lower = (prompt or "").lower()
     if "called " in prompt:
         words = prompt.split("called ")[1].split()[:3]
-        title = " ".join(words).rstrip(".,\"'")
-    elif "neural vision" in prompt_lower:
-        title = "Neural Vision Studio"
-    elif "crypto" in prompt_lower or "portfolio" in prompt_lower:
-        title = "Apex Crypto Portfolio"
-    elif "quiz" in prompt_lower or "flashcard" in prompt_lower:
-        title = "MindMap Quiz Academy"
-    elif "health" in prompt_lower or "telehealth" in prompt_lower or "vital" in prompt_lower:
-        title = "VitalPulse Telehealth"
-    elif "kanban" in prompt_lower or "focus" in prompt_lower:
-        title = "FocusFlow Workspace"
-    elif "pricing" in prompt_lower or "saas" in prompt_lower:
-        title = "SaaS Launchpad Pricing"
-    elif "store" in prompt_lower or "shop" in prompt_lower or "cyberware" in prompt_lower:
-        title = "Aura Cyberware Store"
-    elif "api" in prompt_lower or "tester" in prompt_lower:
-        title = "APINexus Tester Studio"
-    else:
-        words = [w.capitalize() for w in re.findall(r'\b[A-Za-z]{3,}\b', prompt)[:3]]
-        if words:
-            title = " ".join(words)
+        return " ".join(words).rstrip(".,\"'")
 
+    keyword_titles = {
+        "neural vision": "Neural Vision Studio",
+        "crypto": "Apex Crypto Portfolio",
+        "portfolio": "Apex Crypto Portfolio",
+        "quiz": "MindMap Quiz Academy",
+        "flashcard": "MindMap Quiz Academy",
+        "health": "VitalPulse Telehealth",
+        "telehealth": "VitalPulse Telehealth",
+        "vital": "VitalPulse Telehealth",
+        "kanban": "FocusFlow Workspace",
+        "focus": "FocusFlow Workspace",
+        "pricing": "SaaS Launchpad Pricing",
+        "saas": "SaaS Launchpad Pricing",
+        "store": "Aura Cyberware Store",
+        "shop": "Aura Cyberware Store",
+        "cyberware": "Aura Cyberware Store",
+        "api": "APINexus Tester Studio",
+        "tester": "APINexus Tester Studio",
+    }
+
+    for key, val in keyword_titles.items():
+        if key in prompt_lower:
+            return val
+
+    words = [w.capitalize() for w in re.findall(r'\b[A-Za-z]{3,}\b', prompt)[:3]]
+    return " ".join(words) if words else "Gemini Nexus Web App"
+
+
+def _build_fallback_app(prompt: str, history: Optional[list] = None) -> dict:
+    title = _get_fallback_app_title(prompt)
     code = _generate_fallback_html(title, prompt)
     
     return {
