@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.env
+.venv/
+env/
+venv/
+dist/
+build/
+.DS_Store
+*.log
