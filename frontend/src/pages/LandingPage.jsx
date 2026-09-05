@@ -77,7 +77,7 @@ const STATS = [
   { label: 'Multimodal Engines', value: '4 Core' },
   { label: 'Latency Speed', value: '< 60s' },
   { label: 'Supported Inputs', value: 'Image / Code / Repo / Text' },
-  { label: 'Live Sandbox', value: '100% Standalone' }
+  { label: 'Live Sandbox', value: '92% Standalone' }
 ]
 
 export default function LandingPage() {
