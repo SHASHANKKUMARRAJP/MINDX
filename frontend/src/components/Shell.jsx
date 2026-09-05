@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 const NAV = [
   { to: '/', label: 'Overview', icon: '✦' },
   { to: '/home', label: 'Workspace', icon: '⬡' },
+  { to: '/notebook', label: 'Notebook', icon: '📘' },
   { to: '/reality', label: 'Reality', icon: '◎' },
   { to: '/builder', label: 'Builder', icon: '◈' },
   { to: '/verify', label: 'Verify', icon: '◉' },
