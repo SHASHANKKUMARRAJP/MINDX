@@ -51,7 +51,8 @@ def _extract_json(text: str) -> dict:
         try:
             fixed = re.sub(r'[\r\n]+', '\\n', cleaned)
             return json.loads(fixed)
-        except Exception:
+        except (json.JSONDecodeError, TypeError) as err:
+            print(f"[JSON Cleanup Error] {err}")
             return {}
 
 

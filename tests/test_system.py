@@ -24,10 +24,9 @@ def test_no_hardcoded_secrets():
         for file in files:
             if file.endswith((".py", ".jsx", ".js", ".json", ".html")) and file != "test_system.py":
                 filepath = os.path.join(root, file)
-                try:
-                    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                        content = f.read()
-                        for pattern in secret_patterns:
-                            assert pattern not in content, f"Potential secret {pattern} found in {filepath}"
-                except (OSError, UnicodeDecodeError) as file_err:
-                    print(f"Skipping unreadable file {filepath}: {file_err}")
+                if not os.path.isfile(filepath):
+                    continue
+                with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                    for pattern in secret_patterns:
+                        assert pattern not in content, f"Potential secret {pattern} found in {filepath}"

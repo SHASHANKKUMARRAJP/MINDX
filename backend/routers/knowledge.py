@@ -36,7 +36,8 @@ def extract_text_from_file(filename: str, content: bytes) -> str:
         # Try decode as text
         try:
             return content.decode("utf-8", errors="ignore")[:10000]
-        except Exception:
+        except (UnicodeDecodeError, TypeError) as decode_err:
+            print(f"[Knowledge Decode Notice] {decode_err}")
             return f"[Binary file: {filename} — could not extract text]"
 
 

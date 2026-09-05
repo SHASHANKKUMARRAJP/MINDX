@@ -18,7 +18,8 @@ async def build_app(
         if history:
             try:
                 history_obj = [json.loads(history)]
-            except Exception:
+            except (json.JSONDecodeError, TypeError) as parse_err:
+                print(f"[Builder History Parse Notice] {parse_err}")
                 history_obj = None
         
         result = await generate_app(prompt, history_obj)
