@@ -171,6 +171,7 @@ export default function LandingPage() {
           >
             <button
               onClick={() => navigate('/home')}
+              aria-label="Launch Multimodal Workspace"
               className="btn-nexus px-7 py-3.5 text-base font-outfit font-700 flex items-center gap-2.5 w-full sm:w-auto justify-center shadow-xl shadow-cyan-500/20"
             >
               <span>🚀 Launch Multimodal Workspace</span>
@@ -178,6 +179,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => navigate('/builder')}
+              aria-label="Build App from GitHub Repository"
               className="glass px-7 py-3.5 rounded-xl text-base font-outfit font-600 text-white/80 hover:text-white border border-white/10 hover:border-purple-400/40 transition-all w-full sm:w-auto text-center flex items-center gap-2 justify-center"
             >
               <svg className="w-5 h-5 text-white/70" fill="currentColor" viewBox="0 0 24 24">
