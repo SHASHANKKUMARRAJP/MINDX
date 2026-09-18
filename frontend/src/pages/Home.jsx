@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
@@ -110,8 +110,464 @@ function ChatMsg({ msg }) {
   )
 }
 
+// ─── Notebook Studio View Sub-components ──────────────────────────────────────
+
+function SlideDeckView({ nodes = [], summary = '', keyThemes = [], files = [] }) {
+  const [slide, setSlide] = useState(0)
+
+  const slides = useMemo(() => {
+    const list = []
+    list.push({
+      type: 'title',
+      title: 'Notebook Synthesis & Concept Slide Deck',
+      subtitle: `${files.length} Source Document${files.length !== 1 ? 's' : ''} Ingested`,
+      summary: summary || 'Comprehensive study deck synthesized from uploaded notebook sources.',
+      keyThemes: keyThemes
+    })
+
+    nodes.forEach((n, idx) => {
+      list.push({
+        type: 'concept',
+        title: n.title,
+        category: n.category || 'Core Concept',
+        description: n.description || 'Key topic synthesized across notebook materials.',
+        importance: n.importance || 4,
+        sources: n.sources || [],
+        slideNum: idx + 1
+      })
+    })
+
+    list.push({
+      type: 'summary',
+      title: 'Key Takeaways & Summary',
+      summary: summary,
+      keyThemes: keyThemes,
+      totalConcepts: nodes.length
+    })
+
+    return list
+  }, [nodes, summary, keyThemes, files])
+
+  const current = slides[slide] || slides[0]
+
+  return (
+    <div style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'radial-gradient(circle at 50% 30%, rgba(124,58,237,0.1) 0%, rgba(4,8,16,0.95) 100%)', color: 'white', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(0,212,255,0.15)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
+            📊 SLIDE DECK VIEW
+          </span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit' }}>
+            Slide {slide + 1} of {slides.length}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => setSlide(s => Math.max(0, s - 1))} disabled={slide === 0}
+            style={{ padding: '6px 14px', borderRadius: 8, background: slide === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)', color: slide === 0 ? 'rgba(255,255,255,0.2)' : '#00d4ff', cursor: slide === 0 ? 'not-allowed' : 'pointer', fontFamily: 'Outfit', fontWeight: 700 }}>
+            ← Prev
+          </button>
+          <button onClick={() => setSlide(s => Math.min(slides.length - 1, s + 1))} disabled={slide === slides.length - 1}
+            style={{ padding: '6px 14px', borderRadius: 8, background: slide === slides.length - 1 ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg,#00d4ff,#7c3aed)', border: 'none', color: slide === slides.length - 1 ? 'rgba(255,255,255,0.2)' : 'white', cursor: slide === slides.length - 1 ? 'not-allowed' : 'pointer', fontFamily: 'Outfit', fontWeight: 700 }}>
+            Next →
+          </button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={slide} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.04 }} transition={{ duration: 0.3 }}
+            style={{ width: '100%', maxWidth: 780, minHeight: 340, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 20, padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
+            
+            {current.type === 'title' && (
+              <div style={{ textAlign: 'center', margin: 'auto' }}>
+                <span style={{ padding: '4px 14px', borderRadius: 99, fontSize: 12, background: 'rgba(124,58,237,0.2)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.4)', fontFamily: 'Outfit', fontWeight: 700 }}>{current.subtitle}</span>
+                <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 30, marginTop: 16, marginBottom: 12, background: 'linear-gradient(135deg,#00d4ff,#7c3aed,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{current.title}</h1>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13.5, maxWidth: 600, margin: '0 auto', lineHeight: 1.6 }}>{current.summary}</p>
+              </div>
+            )}
+
+            {current.type === 'concept' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(0,212,255,0.15)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>{current.category}</span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit' }}>Importance: {'★'.repeat(current.importance)}</span>
+                </div>
+                <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 24, color: 'white', marginBottom: 14 }}>{current.title}</h2>
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, fontFamily: 'Inter' }}>{current.description}</p>
+                </div>
+              </div>
+            )}
+
+            {current.type === 'summary' && (
+              <div>
+                <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 24, color: '#34d399', marginBottom: 12 }}>Summary &amp; Key Themes</h2>
+                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, marginBottom: 16 }}>{current.summary}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {current.keyThemes?.map((t, i) => (
+                    <span key={i} style={{ padding: '5px 12px', borderRadius: 99, fontSize: 12, background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)', fontFamily: 'Outfit', fontWeight: 600 }}>✦ {t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12, width: '100%', marginTop: 20 }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit' }}>MINDX Nexus Slide Deck Generator</span>
+              <span style={{ fontSize: 11, color: 'rgba(0,212,255,0.6)', fontFamily: 'Outfit', fontWeight: 600 }}>{slide + 1} / {slides.length}</span>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 14 }}>
+        {slides.map((_, i) => (
+          <button key={i} onClick={() => setSlide(i)}
+            style={{ width: i === slide ? 24 : 8, height: 8, borderRadius: 4, background: i === slide ? '#00d4ff' : 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ReportView({ nodes = [], summary = '', keyThemes = [], files = [] }) {
+  return (
+    <div style={{ padding: 24, overflowY: 'auto', height: '100%', background: '#040810', color: 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ maxWidth: 840, margin: '0 auto', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 24 }}>
+          <div>
+            <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
+              📄 EXECUTIVE REPORT
+            </span>
+            <h1 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 26, color: 'white', marginTop: 10 }}>Comprehensive Synthesis Report</h1>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Generated from {files.length} document source(s) · {nodes.length} mapped concepts</p>
+          </div>
+          <button onClick={() => window.print()}
+            style={{ padding: '8px 16px', borderRadius: 8, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', border: 'none', color: 'white', fontFamily: 'Outfit', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+            🖨 Print / Save PDF
+          </button>
+        </div>
+
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: '#00d4ff', marginBottom: 8 }}>1. Executive Summary</h2>
+          <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)' }}>{summary || 'Detailed analytical synthesis across all submitted study materials.'}</p>
+        </div>
+
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: '#34d399', marginBottom: 12 }}>2. Primary Themes &amp; Domains</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            {keyThemes.map((t, idx) => (
+              <div key={idx} style={{ padding: 12, borderRadius: 10, background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)', fontSize: 12.5, fontWeight: 600, color: '#34d399', fontFamily: 'Outfit' }}>
+                ✦ {t}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 18, color: '#a78bfa', marginBottom: 12 }}>3. Concept Matrix</h2>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.05)', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <th style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Concept</th>
+                  <th style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Category</th>
+                  <th style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Summary Definition</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nodes.map((n, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td style={{ padding: '10px 12px', fontWeight: 700, color: '#00d4ff', fontFamily: 'Outfit' }}>{n.title}</td>
+                    <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.7)' }}>{n.category || 'General'}</td>
+                    <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{n.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FlashcardsView({ nodes = [] }) {
+  const [index, setIndex] = useState(0)
+  const [flipped, setFlipped] = useState(false)
+  const [mastered, setMastered] = useState(new Set())
+
+  if (!nodes.length) return null
+  const current = nodes[index] || nodes[0]
+  const isMastered = mastered.has(current.id)
+
+  const toggleMastered = () => {
+    setMastered(prev => {
+      const next = new Set(prev)
+      if (next.has(current.id)) next.delete(current.id)
+      else next.add(current.id)
+      return next
+    })
+  }
+
+  return (
+    <div style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#040810' }}>
+      <div style={{ width: '100%', maxWidth: 540, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 16 }}>
+          <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(236,72,153,0.15)', color: '#ec4899', border: '1px solid rgba(236,72,153,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
+            🎴 FLASHCARDS ({index + 1} / {nodes.length})
+          </span>
+          <span style={{ fontSize: 12, color: '#34d399', fontFamily: 'Outfit', fontWeight: 600 }}>
+            ✓ {mastered.size} Mastered
+          </span>
+        </div>
+
+        <div onClick={() => setFlipped(v => !v)}
+          style={{ width: '100%', height: 280, perspective: 1000, cursor: 'pointer', marginBottom: 20 }}>
+          <motion.div animate={{ rotateY: flipped ? 180 : 0 }} transition={{ duration: 0.5 }}
+            style={{ width: '100%', height: '100%', position: 'relative', transformStyle: 'preserve-3d', borderRadius: 20 }}>
+            <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', background: 'linear-gradient(135deg,rgba(0,212,255,0.08),rgba(124,58,237,0.12))', border: `2px solid ${isMastered ? '#10b981' : 'rgba(0,212,255,0.3)'}`, borderRadius: 20, padding: 30, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
+              <span style={{ fontSize: 11, color: '#00d4ff', fontFamily: 'Outfit', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>{current.category || 'Concept'}</span>
+              <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 24, color: 'white' }}>{current.title}</h2>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit' }}>Click card to reveal definition ↷</span>
+            </div>
+            <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(4,8,16,0.95))', border: '2px solid rgba(124,58,237,0.4)', borderRadius: 20, padding: 30, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
+              <span style={{ fontSize: 11, color: '#a78bfa', fontFamily: 'Outfit', fontWeight: 700 }}>DEFINITION &amp; INSIGHT</span>
+              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, fontFamily: 'Inter' }}>{current.description}</p>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit' }}>Click to flip back ↶</span>
+            </div>
+          </motion.div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center' }}>
+          <button onClick={() => { setFlipped(false); setIndex(i => Math.max(0, i - 1)) }} disabled={index === 0}
+            style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: index === 0 ? 'not-allowed' : 'pointer', fontFamily: 'Outfit', fontWeight: 600 }}>
+            ← Previous
+          </button>
+          <button onClick={toggleMastered}
+            style={{ padding: '8px 20px', borderRadius: 10, background: isMastered ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)', border: `1px solid ${isMastered ? '#10b981' : 'rgba(255,255,255,0.2)'}`, color: isMastered ? '#34d399' : 'white', cursor: 'pointer', fontFamily: 'Outfit', fontWeight: 700 }}>
+            {isMastered ? '✓ Mastered' : 'Mark as Mastered'}
+          </button>
+          <button onClick={() => { setFlipped(false); setIndex(i => Math.min(nodes.length - 1, i + 1)) }} disabled={index === nodes.length - 1}
+            style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', border: 'none', color: 'white', cursor: index === nodes.length - 1 ? 'not-allowed' : 'pointer', fontFamily: 'Outfit', fontWeight: 600 }}>
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function QuizView({ nodes = [] }) {
+  const [qIndex, setQIndex] = useState(0)
+  const [selectedOpt, setSelectedOpt] = useState(null)
+  const [score, setScore] = useState(0)
+  const [answered, setAnswered] = useState(false)
+
+  const questions = useMemo(() => {
+    return nodes.map((n, i) => {
+      const distractors = nodes.filter(x => x.id !== n.id).map(x => x.description || x.title).slice(0, 3)
+      const options = [n.description || 'Primary concept principle', ...distractors]
+      const sortedOptions = [...options].sort(() => 0.5 - (i % 2))
+      return {
+        concept: n.title,
+        correct: n.description || 'Primary concept principle',
+        options: sortedOptions
+      }
+    })
+  }, [nodes])
+
+  if (!questions.length) return null
+  const current = questions[qIndex]
+
+  const handleSelect = (opt) => {
+    if (answered) return
+    setSelectedOpt(opt)
+    setAnswered(true)
+    if (opt === current.correct) {
+      setScore(s => s + 1)
+    }
+  }
+
+  const handleNext = () => {
+    setSelectedOpt(null)
+    setAnswered(false)
+    setQIndex(i => i + 1)
+  }
+
+  return (
+    <div style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#040810', color: 'white' }}>
+      <div style={{ width: '100%', maxWidth: 600, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 20, padding: 28 }}>
+        {qIndex < questions.length ? (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
+                🎯 QUIZ ({qIndex + 1} / {questions.length})
+              </span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'Outfit' }}>Score: {score}</span>
+            </div>
+
+            <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 20, marginBottom: 16 }}>
+              Which definition best describes <span style={{ color: '#00d4ff' }}>"{current.concept}"</span>?
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {current.options.map((opt, idx) => {
+                const isCorrect = opt === current.correct
+                const isSelected = selectedOpt === opt
+                let bg = 'rgba(255,255,255,0.04)'
+                let border = 'rgba(255,255,255,0.08)'
+
+                if (answered) {
+                  if (isCorrect) { bg = 'rgba(16,185,129,0.2)'; border = '#10b981' }
+                  else if (isSelected) { bg = 'rgba(239,68,68,0.2)'; border = '#ef4444' }
+                }
+
+                return (
+                  <button key={idx} onClick={() => handleSelect(opt)} disabled={answered}
+                    style={{ padding: 14, borderRadius: 12, background: bg, border: `1px solid ${border}`, color: 'white', textAlign: 'left', fontSize: 13, fontFamily: 'Inter', cursor: answered ? 'default' : 'pointer', transition: 'all 0.2s' }}>
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+
+            {answered && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: selectedOpt === current.correct ? '#34d399' : '#f87171', fontFamily: 'Outfit' }}>
+                  {selectedOpt === current.correct ? '✓ Correct!' : '✗ Incorrect choice'}
+                </span>
+                <button onClick={handleNext}
+                  style={{ padding: '8px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', border: 'none', color: 'white', fontFamily: 'Outfit', fontWeight: 700, cursor: 'pointer' }}>
+                  Next Question →
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 20 }}>
+            <h2 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 28, color: '#00d4ff', marginBottom: 10 }}>Quiz Complete! 🎉</h2>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.8)', marginBottom: 20 }}>Your Score: <strong style={{ color: '#34d399' }}>{score}</strong> / {questions.length} ({Math.round((score / questions.length) * 100)}%)</p>
+            <button onClick={() => { setQIndex(0); setScore(0); setAnswered(false); setSelectedOpt(null) }}
+              style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', border: 'none', color: 'white', fontFamily: 'Outfit', fontWeight: 700, cursor: 'pointer' }}>
+              ↺ Retake Quiz
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function InfographicView({ nodes = [], summary = '', keyThemes = [], files = [] }) {
+  return (
+    <div style={{ padding: 24, overflowY: 'auto', height: '100%', background: '#040810', color: 'white' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto' }}>
+        <div style={{ background: 'linear-gradient(135deg,rgba(0,212,255,0.12),rgba(124,58,237,0.18))', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 20, padding: 28, marginBottom: 20, textAlign: 'center' }}>
+          <span style={{ padding: '3px 12px', borderRadius: 99, fontSize: 11, background: 'rgba(0,212,255,0.2)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.4)', fontFamily: 'Outfit', fontWeight: 700 }}>
+            🎨 VISUAL INFOGRAPHIC MAP
+          </span>
+          <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 28, marginTop: 12, marginBottom: 8 }}>Multimodal Knowledge Infographic</h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 600, margin: '0 auto' }}>{summary}</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20 }}>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#00d4ff', fontFamily: 'Outfit' }}>{files.length}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Source Files</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#a78bfa', fontFamily: 'Outfit' }}>{nodes.length}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Mapped Concepts</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#34d399', fontFamily: 'Outfit' }}>{keyThemes.length}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Core Themes</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 14 }}>
+          {nodes.map((n, i) => (
+            <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 18 }}>
+              <span style={{ fontSize: 10, color: '#00d4ff', fontFamily: 'Outfit', fontWeight: 700, textTransform: 'uppercase' }}>{n.category || 'Concept'}</span>
+              <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 16, color: 'white', marginTop: 4, marginBottom: 8 }}>{n.title}</h3>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, fontFamily: 'Inter' }}>{n.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DataTableView({ nodes = [] }) {
+  const [filter, setFilter] = useState('')
+
+  const filtered = useMemo(() => {
+    if (!filter.trim()) return nodes
+    const q = filter.toLowerCase()
+    return nodes.filter(n => n.title.toLowerCase().includes(q) || (n.category || '').toLowerCase().includes(q) || (n.description || '').toLowerCase().includes(q))
+  }, [nodes, filter])
+
+  const exportCSV = () => {
+    const headers = ['Title', 'Category', 'Importance', 'Description']
+    const rows = filtered.map(n => [`"${n.title}"`, `"${n.category || ''}"`, n.importance || 3, `"${(n.description || '').replace(/"/g, '""')}"`])
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', 'notebook_data_table.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  return (
+    <div style={{ padding: 24, overflowY: 'auto', height: '100%', background: '#040810', color: 'white' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
+              📋 DATA TABLE
+            </span>
+            <input type="text" placeholder="Filter concepts..." value={filter} onChange={e => setFilter(e.target.value)}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 12px', color: 'white', fontSize: 12, fontFamily: 'Inter', outline: 'none' }} />
+          </div>
+          <button onClick={exportCSV}
+            style={{ padding: '6px 14px', borderRadius: 8, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', border: 'none', color: 'white', fontFamily: 'Outfit', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+            📥 Export CSV
+          </button>
+        </div>
+
+        <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Title</th>
+                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Category</th>
+                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Importance</th>
+                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((n, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <td style={{ padding: 12, fontWeight: 700, color: '#00d4ff', fontFamily: 'Outfit' }}>{n.title}</td>
+                  <td style={{ padding: 12, color: '#a78bfa', fontFamily: 'Outfit' }}>{n.category || 'General'}</td>
+                  <td style={{ padding: 12, color: '#f59e0b' }}>{'★'.repeat(n.importance || 3)}</td>
+                  <td style={{ padding: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontFamily: 'Inter' }}>{n.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Embedded Notebook Workspace ─────────────────────────────────────────────
 function NotebookWorkspace({ files, onClose }) {
+  const [workspaceView, setWorkspaceView] = useState('graph') // 'graph' | 'slides' | 'report' | 'flashcards' | 'quiz' | 'infographic' | 'table'
   const [graphData, setGraphData] = useState(null)
   const [summary, setSummary] = useState('')
   const [keyThemes, setKeyThemes] = useState([])
@@ -252,6 +708,30 @@ function NotebookWorkspace({ files, onClose }) {
         </div>
       </div>
 
+      {/* Studio Mode Toolbar */}
+      <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.5)', padding: '6px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', flexShrink: 0 }}>
+        {[
+          { id: 'graph', label: '⬡ Concept Graph' },
+          { id: 'slides', label: '📊 Slide Deck' },
+          { id: 'report', label: '📄 Reports' },
+          { id: 'flashcards', label: '🎴 Flashcards' },
+          { id: 'quiz', label: '🎯 Quiz' },
+          { id: 'infographic', label: '🎨 Infographic' },
+          { id: 'table', label: '📋 Data Table' },
+        ].map(v => (
+          <button key={v.id} onClick={() => setWorkspaceView(v.id)}
+            style={{
+              padding: '5px 12px', borderRadius: 7, fontSize: 11.5, fontWeight: 600, fontFamily: 'Outfit, sans-serif',
+              background: workspaceView === v.id ? 'linear-gradient(135deg,rgba(0,212,255,0.2),rgba(124,58,237,0.25))' : 'transparent',
+              border: `1px solid ${workspaceView === v.id ? 'rgba(0,212,255,0.4)' : 'transparent'}`,
+              color: workspaceView === v.id ? '#00d4ff' : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s'
+            }}>
+            {v.label}
+          </button>
+        ))}
+      </div>
+
       {buildErr && (
         <div style={{ padding: '8px 14px', background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <p style={{ color: '#f87171', fontSize: 12, fontFamily: 'Outfit' }}>⚠ {buildErr}</p>
@@ -259,56 +739,65 @@ function NotebookWorkspace({ files, onClose }) {
         </div>
       )}
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 280px', overflow: 'hidden', minHeight: 0 }}>
-        <div style={{ position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: 'radial-gradient(ellipse 80% 80% at 50% 50%,rgba(0,212,255,0.02) 0%,transparent 70%)' }}>
-          {!hasGraph && !building && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 30 }}>
-              <div style={{ fontSize: 48, opacity: 0.12 }}>⬡</div>
-              <p style={{ fontFamily: 'Outfit,sans-serif', fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-                Click <span style={{ color: 'rgba(0,212,255,0.7)' }}>✦ Build Graph</span> to map your knowledge
-              </p>
-            </div>
-          )}
-          {building && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'conic-gradient(from 0deg,#00d4ff,#7c3aed,#00d4ff)', animation: 'nbspin 1.5s linear infinite', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#040810', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>⬡</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 14, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 4 }}>
-                  MINDX is mapping your knowledge…
+      {workspaceView === 'slides' && <SlideDeckView nodes={graphData?.nodes} summary={summary} keyThemes={keyThemes} files={files} />}
+      {workspaceView === 'report' && <ReportView nodes={graphData?.nodes} summary={summary} keyThemes={keyThemes} files={files} />}
+      {workspaceView === 'flashcards' && <FlashcardsView nodes={graphData?.nodes} />}
+      {workspaceView === 'quiz' && <QuizView nodes={graphData?.nodes} />}
+      {workspaceView === 'infographic' && <InfographicView nodes={graphData?.nodes} summary={summary} keyThemes={keyThemes} files={files} />}
+      {workspaceView === 'table' && <DataTableView nodes={graphData?.nodes} />}
+
+      {workspaceView === 'graph' && (
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 280px', overflow: 'hidden', minHeight: 0 }}>
+          <div style={{ position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: 'radial-gradient(ellipse 80% 80% at 50% 50%,rgba(0,212,255,0.02) 0%,transparent 70%)' }}>
+            {!hasGraph && !building && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 30 }}>
+                <div style={{ fontSize: 48, opacity: 0.12 }}>⬡</div>
+                <p style={{ fontFamily: 'Outfit,sans-serif', fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                  Click <span style={{ color: 'rgba(0,212,255,0.7)' }}>✦ Build Graph</span> to map your knowledge
                 </p>
               </div>
+            )}
+            {building && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'conic-gradient(from 0deg,#00d4ff,#7c3aed,#00d4ff)', animation: 'nbspin 1.5s linear infinite', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#040810', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>⬡</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 14, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 4 }}>
+                    MINDX is mapping your knowledge…
+                  </p>
+                </div>
+              </div>
+            )}
+            {hasGraph && (
+              <div style={{ flex: 1, position: 'relative' }}>
+                <NotebookGraph
+                  nodes={graphData.nodes}
+                  edges={graphData.edges}
+                  selectedNode={selectedNode}
+                  onNodeSelect={(node) => { setSelectedNode(node); setAiResponse(null) }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div style={{ background: 'rgba(4,8,16,0.6)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '8px 13px 6px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontSize: 10, fontFamily: 'Outfit', fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AI Context</p>
+              {selectedNode && <button onClick={() => { setSelectedNode(null); setAiResponse(null) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 15 }}>×</button>}
             </div>
-          )}
-          {hasGraph && (
-            <div style={{ flex: 1, position: 'relative' }}>
-              <NotebookGraph
-                nodes={graphData.nodes}
-                edges={graphData.edges}
-                selectedNode={selectedNode}
-                onNodeSelect={(node) => { setSelectedNode(node); setAiResponse(null) }}
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <NotebookContextPanel
+                node={selectedNode}
+                onAction={doAction}
+                aiResponse={aiResponse}
+                aiLoading={aiLoading}
+                onAskAbout={q => { setChatInput(q); setChatOpen(true); chatInputRef.current?.focus() }}
               />
             </div>
-          )}
-        </div>
-
-        <div style={{ background: 'rgba(4,8,16,0.6)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '8px 13px 6px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontSize: 10, fontFamily: 'Outfit', fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AI Context</p>
-            {selectedNode && <button onClick={() => { setSelectedNode(null); setAiResponse(null) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 15 }}>×</button>}
-          </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <NotebookContextPanel
-              node={selectedNode}
-              onAction={doAction}
-              aiResponse={aiResponse}
-              aiLoading={aiLoading}
-              onAskAbout={q => { setChatInput(q); setChatOpen(true); chatInputRef.current?.focus() }}
-            />
           </div>
         </div>
-      </div>
+      )}
 
       <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(4,8,16,0.9)' }}>
         <AnimatePresence>
@@ -793,7 +1282,7 @@ export default function Home() {
           "Key themes and domain concepts extracted across submitted content.",
           "Multimodal AI workspace processing active and verified."
         ],
-        suggested_modules: ["Second Brain", "AI App Builder", "Content Verify"],
+        suggested_modules: ["Reality Scanner", "AI App Builder", "Content Verify"],
         follow_up_questions: [
           "Would you like to generate an interactive web app prototype from this data?",
           "Should we extract a 3D knowledge graph for deeper exploration?"

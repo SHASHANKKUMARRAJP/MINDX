@@ -38,23 +38,6 @@ const MODULE_SHOWCASE = [
     ]
   },
   {
-    id: 'brain',
-    path: '/notebook',
-    title: 'Second Brain & Knowledge Graph',
-    subtitle: 'Interactive 3D Galaxy Concept Graph',
-    badge: 'Graph Engine',
-    badgeColor: '#a78bfa',
-    icon: '⬡',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-    desc: 'Upload multi-document sources to synthesize deep context, extract core concepts, and visualize inter-node relationships in a 3D galaxy view.',
-    features: [
-      'Multi-File Source Context Ingestion',
-      'Interactive 3D Galaxy Node Visualization',
-      'Concept Deep Dive & Action Generator',
-      'Context-Aware AI Assistant Chat'
-    ]
-  },
-  {
     id: 'verify',
     path: '/verify',
     title: 'Content Verifier',
@@ -82,7 +65,7 @@ const STATS = [
         </svg>
       </div>
     ),
-    value: '4 Core',
+    value: '3 Core',
     label: 'MULTIMODAL ENGINES'
   },
   {
@@ -159,7 +142,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-white/60 text-base sm:text-lg leading-relaxed font-outfit max-w-2xl"
           >
-            The next-generation multimodal workspace. Scan physical reality, clone &amp; generate web apps from GitHub, build 3D knowledge graphs, and verify truth with deep multimodal intelligence.
+            The next-generation multimodal workspace. Scan physical reality, clone &amp; generate web apps from GitHub, and verify truth with deep multimodal intelligence.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -414,7 +397,7 @@ export default function LandingPage() {
             Choose Your Destination
           </h2>
           <p className="text-white/40 text-sm mt-2">
-            Jump directly into any of the 4 specialized multimodal workspaces.
+            Jump directly into any of the 3 specialized multimodal workspaces.
           </p>
         </div>
 

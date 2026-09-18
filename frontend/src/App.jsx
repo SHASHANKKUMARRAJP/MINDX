@@ -6,7 +6,6 @@ import Home from './pages/Home'
 import Reality from './pages/Reality'
 import Builder from './pages/Builder'
 import Verify from './pages/Verify'
-import Notebook from './pages/Notebook'
 
 export default function App() {
   return (
@@ -24,7 +23,6 @@ export default function App() {
             <Route path="/reality" element={<Reality />} />
             <Route path="/builder" element={<Builder />} />
             <Route path="/verify" element={<Verify />} />
-            <Route path="/notebook" element={<Notebook />} />
           </Routes>
         </AnimatePresence>
       </Shell>

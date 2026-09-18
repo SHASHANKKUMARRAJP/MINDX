@@ -534,7 +534,7 @@ Create meaningful connections. Identify real gaps and missing pieces."""
 
 
 def _fallback_extract_knowledge(texts: list[str], filenames: list[str]) -> dict:
-    """Generate a structured knowledge graph fallback with intelligent topic extraction."""
+    """Generate a structured knowledge graph fallback with intelligent root topic & hierarchical mindmap extraction."""
     nodes = []
     edges = []
     node_ids = set()
@@ -544,68 +544,111 @@ def _fallback_extract_knowledge(texts: list[str], filenames: list[str]) -> dict:
     # Junk header filter patterns
     JUNK_PATTERNS = [
         r"^---\s*page\s*\d+", r"^\(?\d{5,}\)?$", r"^assistant\s+professor", r"^dr\.\s+",
-        r"^prof\.\s+", r"^topic\s*-\s*\d+", r"^unit\s*-\s*\d+", r"^subject\s*code"
+        r"^prof\.\s+", r"^topic\s*-\s*\d+", r"^unit\s*-\s*\d+", r"^subject\s*code",
+        r"^chapter\s*\d+", r"^page\s*\d+"
     ]
 
     def is_junk(text: str) -> bool:
         t = text.lower().strip()
+        if _is_junk_title(t):
+            return True
         return any(re.search(pat, t) for pat in JUNK_PATTERNS)
 
     for idx, (name, text) in enumerate(zip(filenames, texts)):
-        # Main Subject Node
-        main_title = name.replace(".pdf", "").replace(".txt", "").replace("_", " ").title()
-        doc_id = f"doc_{idx}"
+        raw_lines = [line_str.strip() for line_str in text.split("\n") if len(line_str.strip()) > 3]
+        
+        # Try to find true document title from top non-junk lines
+        extracted_root_title = None
+        for line in raw_lines[:20]:
+            cleaned = _clean_title_string(line)
+            if not is_junk(cleaned) and 6 <= len(cleaned) <= 70 and not cleaned.lower().startswith("---") and "unit" not in cleaned.lower():
+                extracted_root_title = cleaned
+                break
+
+        main_title = extracted_root_title or name.replace(".pdf", "").replace(".txt", "").replace("_", " ").title()
+        doc_id = "root" if idx == 0 else f"doc_{idx}"
+
         nodes.append({
             "id": doc_id,
             "title": main_title,
             "type": "topic",
+            "is_root": (idx == 0),
+            "parent_id": None if idx == 0 else "root",
             "description": f"Main Subject Document: {name}",
             "sources": [name],
             "related_concepts": []
         })
         node_ids.add(doc_id)
 
-        # Extract meaningful lines
-        raw_lines = [line_str.strip() for line_str in text.split("\n") if len(line_str.strip()) > 5]
         valid_concepts = []
-
         for line in raw_lines:
-            cleaned = re.sub(r"^[#\*\-\d\.\s]+", "", line).strip()
+            cleaned = _clean_title_string(line)
             if not (4 <= len(cleaned) <= 65):
                 continue
-            if is_junk(cleaned):
+            if is_junk(cleaned) or cleaned.lower() == main_title.lower():
                 continue
             if cleaned not in valid_concepts:
                 valid_concepts.append(cleaned)
-            if len(valid_concepts) >= 12:
+            if len(valid_concepts) >= 15:
                 break
 
-        for k_idx, concept_name in enumerate(valid_concepts):
-            nid = f"n_{idx}_{k_idx}"
-            if nid in node_ids:
-                continue
+        # Distribute into Level 1 categories and Level 2 sub-concepts
+        level1_count = min(6, len(valid_concepts))
+        level1_nodes = []
+
+        for k_idx in range(level1_count):
+            c_name = valid_concepts[k_idx]
+            nid = f"cat_{idx}_{k_idx}"
             node_ids.add(nid)
-            ntype = types[k_idx % len(types)]
+            level1_nodes.append(nid)
             nodes.append({
                 "id": nid,
-                "title": concept_name,
-                "type": ntype,
-                "description": f"Key concept identified from {name}",
+                "title": c_name,
+                "type": "topic",
+                "is_root": False,
+                "parent_id": doc_id,
+                "description": f"Core category identified in {name}",
                 "sources": [name],
                 "related_concepts": [doc_id]
             })
             edges.append({
                 "source": doc_id,
                 "target": nid,
-                "label": "defines",
+                "label": "includes",
                 "strength": 1.0
+            })
+
+        # Level 2 sub-concepts attached under Level 1 nodes
+        for k_idx in range(level1_count, len(valid_concepts)):
+            c_name = valid_concepts[k_idx]
+            nid = f"sub_{idx}_{k_idx}"
+            node_ids.add(nid)
+            parent_l1 = level1_nodes[(k_idx - level1_count) % len(level1_nodes)] if level1_nodes else doc_id
+            ntype = types[k_idx % len(types)]
+            nodes.append({
+                "id": nid,
+                "title": c_name,
+                "type": ntype,
+                "is_root": False,
+                "parent_id": parent_l1,
+                "description": f"Sub-concept identified in {name}",
+                "sources": [name],
+                "related_concepts": [parent_l1]
+            })
+            edges.append({
+                "source": parent_l1,
+                "target": nid,
+                "label": "defines",
+                "strength": 0.8
             })
 
     if len(nodes) < 2:
         nodes = [{
-            "id": "doc_0",
-            "title": filenames[0] if filenames else "Core Concept Map",
+            "id": "root",
+            "title": filenames[0].replace(".pdf","").title() if filenames else "Core Mindmap",
             "type": "topic",
+            "is_root": True,
+            "parent_id": None,
             "description": "Processed document source",
             "sources": filenames,
             "related_concepts": []
@@ -614,7 +657,7 @@ def _fallback_extract_knowledge(texts: list[str], filenames: list[str]) -> dict:
     return {
         "nodes": nodes,
         "edges": edges,
-        "summary": f"Knowledge graph synthesized from {len(filenames)} source file(s).",
+        "summary": f"Knowledge mindmap synthesized from {len(filenames)} source file(s).",
         "key_themes": [n["title"] for n in nodes if n["type"] == "topic"][:5],
         "total_sources": len(filenames)
     }
@@ -1452,50 +1495,97 @@ async def general_analyze(text: Optional[str], image_bytes: Optional[bytes], mim
 
 
 # ── Nexus Notebook ────────────────────────────────────────────────
-NOTEBOOK_EXTRACT_SYSTEM = """You are an expert curriculum knowledge architect and concept mapper. Thoroughly analyze ALL pages of the provided source documents and build a complete, comprehensive knowledge graph covering EVERY topic, unit, formula, method, and concept mentioned.
+NOTEBOOK_EXTRACT_SYSTEM = """You are an expert curriculum knowledge architect and hierarchical mindmap designer.
+Analyze the provided source document(s) and build a clean, academic 3-level Mindmap Tree hierarchy focused exclusively on the core technical & subject matter concepts.
+
+CRITICAL DIRECTIVES:
+1. MAIN OVERARCHING SUBJECT AS ROOT NODE:
+   - Identify the TRUE main course title or overall subject of the document as the single Root Node (e.g. "Natural Language Processing (NLP)", "Internet of Things", "Deep Learning", "Data Structures & Algorithms").
+   - DO NOT select a unit sub-heading (such as "Unit 1: Introduction & Programming") or a department header (such as "CSE - Artificial Intelligence") as the root node!
+   - The Root Node MUST be the overarching subject name. Set its id to "root", "is_root": true, and "parent_id": null.
+
+2. STRICT EXCLUSION OF ADMINISTRATIVE & METADATA NOISE:
+   - NEVER extract university headers, department names, or degree branches (e.g. "CSE - Artificial Intelligence", "And Data Science", "Department of Computer Science").
+   - NEVER extract course codes, syllabus metadata, or table of contents clutter (e.g. "3031...", "Content", "Table of Contents", "S.No", "Page 1").
+   - NEVER extract fragmented half-sentences, conjunctions, or truncated line breaks (e.g. "Intelligence And", "Wave", "CSE - Artificial", "First Wave, Second Wave an...").
+
+3. SYNTHESIZE CLEAN ACADEMIC & TECHNICAL CONCEPT NODES:
+   - Level 1 Sub-Topics (5-8 nodes): Major thematic units or core modules (e.g. "NLP Fundamentals", "Text Preprocessing & Tokenization", "Language Modeling", "Neural NLP & Transformers", "Syntactic Parsing").
+   - Level 2 Sub-Concepts (2-5 per Level 1 node): Specific methods, algorithms, models, or formulas under each Level 1 topic (e.g. under "NLP Fundamentals": "Rule-Based Natural Language Processing", "Statistical NLP Methods", "Evaluation Metrics & Challenges").
+   - Keep node titles complete, concise, and professional (2 to 5 words). Do NOT include bullet symbols like "•" or "-".
 
 Return ONLY valid JSON with this exact structure:
 {
   "nodes": [
     {
-      "id": "unique_snake_case_id",
-      "title": "Human-readable concept title",
-      "type": "concept|entity|topic|dependency|fact|gap",
-      "description": "1-2 sentence description grounded in the sources",
-      "sources": ["filename1.pdf", "filename2.md"],
-      "related_concepts": ["other_node_id1", "other_node_id2"]
+      "id": "root",
+      "title": "Natural Language Processing (NLP)",
+      "type": "topic",
+      "is_root": true,
+      "parent_id": null,
+      "description": "Overarching subject summary of the entire document",
+      "sources": ["filename.pdf"],
+      "related_concepts": []
+    },
+    {
+      "id": "sub_topic_1",
+      "title": "NLP Fundamentals & History",
+      "type": "topic",
+      "is_root": false,
+      "parent_id": "root",
+      "description": "Core concepts and evolution of NLP",
+      "sources": ["filename.pdf"],
+      "related_concepts": []
+    },
+    {
+      "id": "concept_1_1",
+      "title": "First Wave Rule-Based Systems",
+      "type": "concept",
+      "is_root": false,
+      "parent_id": "sub_topic_1",
+      "description": "Early rule-based and symbolic language processing",
+      "sources": ["filename.pdf"],
+      "related_concepts": []
     }
   ],
   "edges": [
     {
-      "source": "node_id_1",
-      "target": "node_id_2",
-      "label": "relationship description",
-      "strength": 0.8
+      "source": "root",
+      "target": "sub_topic_1",
+      "label": "includes",
+      "strength": 1.0
     }
   ],
-  "summary": "Comprehensive overview of the entire study material / document",
-  "key_themes": ["theme1", "theme2", "theme3", "theme4", "theme5"]
-}
+  "summary": "Comprehensive overview of Natural Language Processing",
+  "key_themes": ["NLP Fundamentals", "Language Models", "Deep Learning", "Tokenization"]
+}"""
 
-Node type guide:
-- concept: Core subject principles, definitions, methods, algorithms, formulas
-- entity: Named technologies, authors, standards, tools, models
-- topic: Major units, chapters, sub-topics, syllabus sections
-- dependency: Prerequisites, required formulas, execution steps
-- fact: Key exam questions, definitions, theorems, data points
-- gap: Missing derivations, unexplained steps, open study questions
 
-Rules:
-1. Thoroughly map ALL units and sections in the document. Extract 20-50 nodes minimum so no topic is missed.
-2. DO NOT extract PDF header clutter like "Page X", "Dr. Name", or student ID numbers. Focus 100% on academic and technical subject matter.
-3. Create meaningful edges connecting parent topics to sub-concepts and formulas.
-4. Every node MUST list its source file name.
-5. Use snake_case for node IDs."""
+JUNK_NODE_PATTERNS = [
+    r"^cse\b", r"^department\b", r"^college\b", r"^university\b",
+    r"^subject\s+code\b", r"^course\s+code\b", r"^content[s]?\b", r"^index\b",
+    r"^s\.?no\.?\b", r"^page\s*\d+\b", r"^intelligence\s+and\b", r"^and\s+data\s+science\b",
+    r"^academic\s+year\b", r"^regulation\b"
+]
+
+def _is_junk_title(title: str) -> bool:
+    t = title.strip().lower()
+    if len(t) < 3:
+        return True
+    if t in {"content", "contents", "index", "wave", "and", "data science", "intelligence and", "cse - artificial", "cse", "and data science"}:
+        return True
+    return any(re.search(pat, t) for pat in JUNK_NODE_PATTERNS)
+
+def _clean_title_string(title: str) -> str:
+    # Strip leading bullets & symbols
+    t = re.sub(r"^[•\*·\-–—\d\.\s\(\)]+", "", title).strip()
+    # Remove trailing dots / ellipses
+    t = re.sub(r"[\.\s]+$", "", t).strip()
+    return t
 
 
 async def notebook_extract_graph(texts: list, filenames: list) -> dict:
-    """Extract a rich concept knowledge graph from multiple source documents."""
+    """Extract a rich hierarchical concept mindmap knowledge graph from multiple source documents."""
     MAX_PER_FILE = 50000
     combined = "\n\n---\n\n".join(
         f"SOURCE FILE: {name}\n{text[:MAX_PER_FILE]}" for name, text in zip(filenames, texts)
@@ -1506,7 +1596,7 @@ async def notebook_extract_graph(texts: list, filenames: list) -> dict:
     try:
         response = await asyncio.wait_for(
             asyncio.to_thread(_generate_with_fallback, prompt),
-            timeout=30.0
+            timeout=35.0
         )
         data = _extract_json(response.text)
     except Exception as e:
@@ -1519,69 +1609,142 @@ async def notebook_extract_graph(texts: list, filenames: list) -> dict:
     raw_nodes = data.get("nodes", [])
     raw_edges = data.get("edges", [])
 
+    if len(raw_nodes) < 2:
+        print("[Notebook Extract] Fewer than 2 valid nodes returned by AI, invoking fallback extractor")
+        return _fallback_extract_knowledge(texts, filenames)
+
     valid_types = {"concept", "entity", "topic", "dependency", "fact", "gap"}
     clean_nodes = []
     node_ids = set()
     id_map = {}
+    has_root = False
 
+    # Filter raw nodes to exclude administrative junk titles
+    sanitized_raw_nodes = []
     for idx, n in enumerate(raw_nodes):
         if not isinstance(n, dict):
             continue
-        nid = str(n.get("id") or f"node_{idx}").strip().replace(" ", "_").lower()
-        if not nid:
-            nid = f"node_{idx}"
+        title_raw = str(n.get("title") or n.get("label") or "").strip()
+        cleaned_t = _clean_title_string(title_raw)
+        
+        # Don't discard if it's explicitly marked as root node
+        is_r = bool(n.get("is_root") or n.get("id") == "root" or idx == 0)
+        if not is_r and _is_junk_title(cleaned_t):
+            print(f"[Notebook Extract] Filtering junk node: '{title_raw}'")
+            continue
+        
+        n_copy = dict(n)
+        n_copy["title"] = cleaned_t
+        sanitized_raw_nodes.append(n_copy)
+
+    if len(sanitized_raw_nodes) < 2:
+        sanitized_raw_nodes = raw_nodes
+
+    # First pass: map node IDs
+    for idx, n in enumerate(sanitized_raw_nodes):
+        raw_id = str(n.get("id") or f"node_{idx}").strip().replace(" ", "_").lower()
+        if not raw_id:
+            raw_id = f"node_{idx}"
+        nid = raw_id
         if nid in node_ids:
             nid = f"{nid}_{idx}"
         
         node_ids.add(nid)
-        title = str(n.get("title") or n.get("label") or nid).strip()
-        id_map[nid] = nid
+        title = str(n.get("title") or nid).strip()
+        id_map[raw_id] = nid
         id_map[title.lower()] = nid
 
+    # Second pass: build cleaned nodes with hierarchy parent_id
+    for idx, n in enumerate(sanitized_raw_nodes):
+        raw_id = str(n.get("id") or f"node_{idx}").strip().replace(" ", "_").lower()
+        nid = id_map.get(raw_id) or f"node_{idx}"
+        
+        title = _clean_title_string(str(n.get("title") or nid).strip())
+        is_root = bool(n.get("is_root") or nid == "root" or (idx == 0 and not has_root))
+        if is_root and not has_root:
+            has_root = True
+
+        parent_raw = n.get("parent_id")
+        parent_id = None
+        if parent_raw and not is_root:
+            parent_clean = str(parent_raw).strip().replace(" ", "_").lower()
+            parent_id = id_map.get(parent_clean) or id_map.get(str(parent_raw).strip().lower())
+        
         clean_nodes.append({
             "id": nid,
             "title": title,
-            "type": n.get("type", "concept") if n.get("type") in valid_types else "concept",
+            "type": n.get("type", "topic" if is_root else "concept") if n.get("type") in valid_types else "concept",
+            "is_root": is_root,
+            "parent_id": parent_id,
             "description": str(n.get("description") or ""),
             "sources": [str(s) for s in (n.get("sources") or [])],
             "related_concepts": [str(r) for r in (n.get("related_concepts") or [])],
         })
 
-    if len(clean_nodes) < 2:
-        print("[Notebook Extract] Fewer than 2 valid nodes returned by AI, invoking fallback extractor")
-        return _fallback_extract_knowledge(texts, filenames)
+    # Fix Root Node title if it's a unit heading or truncated fragment
+    for cn in clean_nodes:
+        if cn["is_root"]:
+            r_title = cn["title"]
+            r_lower = r_title.lower()
+            # If root title looks like a unit heading e.g. "Introduction & Progra...", resolve subject title
+            if "unit" in r_lower or "introduction &" in r_lower or "intro &" in r_lower or len(r_title) < 4:
+                # Look for clean theme in key_themes or document filename
+                best_theme = next((t for t in data.get("key_themes", []) if not _is_junk_title(t) and "unit" not in t.lower()), None)
+                if best_theme:
+                    cn["title"] = best_theme
+                elif filenames:
+                    cn["title"] = filenames[0].replace(".pdf", "").replace(".txt", "").replace("_", " ").title()
+            break
 
+    # Ensure at least one node is designated as root
+    if clean_nodes and not any(cn["is_root"] for cn in clean_nodes):
+        clean_nodes[0]["is_root"] = True
+        clean_nodes[0]["parent_id"] = None
+
+    root_id = next((cn["id"] for cn in clean_nodes if cn["is_root"]), clean_nodes[0]["id"])
+
+    # Ensure non-root nodes without a parent_id get assigned to root
+    for cn in clean_nodes:
+        if not cn["is_root"] and not cn["parent_id"]:
+            cn["parent_id"] = root_id
+
+    # Build clean edges
     clean_edges = []
     seen_edges = set()
+
+    for cn in clean_nodes:
+        if cn["parent_id"] and cn["parent_id"] in node_ids and cn["parent_id"] != cn["id"]:
+            edge_key = (cn["parent_id"], cn["id"])
+            seen_edges.add(edge_key)
+            clean_edges.append({
+                "source": cn["parent_id"],
+                "target": cn["id"],
+                "label": "includes",
+                "strength": 1.0,
+            })
 
     for e in raw_edges:
         if not isinstance(e, dict):
             continue
         src_raw = str(e.get("source") or e.get("from") or "").strip().replace(" ", "_").lower()
         tgt_raw = str(e.get("target") or e.get("to") or "").strip().replace(" ", "_").lower()
-        
-        src = id_map.get(src_raw) or id_map.get(str(e.get("source") or "").strip().lower())
-        tgt = id_map.get(tgt_raw) or id_map.get(str(e.get("target") or "").strip().lower())
-
+        src = id_map.get(src_raw)
+        tgt = id_map.get(tgt_raw)
         if src and tgt and src in node_ids and tgt in node_ids and src != tgt:
             edge_key = (src, tgt)
             if edge_key not in seen_edges:
                 seen_edges.add(edge_key)
-                try:
-                    strength = float(e.get("strength", 1.0))
-                except (TypeError, ValueError):
-                    strength = 1.0
                 clean_edges.append({
                     "source": src,
                     "target": tgt,
                     "label": str(e.get("label") or "relates to"),
-                    "strength": min(max(strength, 0.0), 1.0),
+                    "strength": 0.8,
                 })
 
     return {
         "nodes": clean_nodes,
         "edges": clean_edges,
-        "summary": str(data.get("summary") or "Knowledge graph extracted."),
+        "summary": str(data.get("summary") or "Mindmap knowledge graph extracted."),
         "key_themes": [str(t) for t in data.get("key_themes", [])],
         "total_sources": len(filenames),
     }
