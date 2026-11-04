@@ -94,10 +94,15 @@ export default function Builder() {
     }
   }
 
+  const [copied, setCopied] = useState(false)
+
   const handleCopyCode = codeText => {
     if (!codeText) return
-    navigator.clipboard.writeText(codeText)
-    toast.success('Source code copied to clipboard!')
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(codeText)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
   }
 
   const handleDownloadCode = (codeText, filename = 'generated-app.html') => {
@@ -111,7 +116,13 @@ export default function Builder() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast.success(`Downloaded ${filename}`)
+  }
+
+  const openFullscreenPreview = codeText => {
+    if (!codeText) return
+    const blob = new Blob([codeText], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
   }
 
   // 1. Build My Idea / Discover Build
@@ -197,23 +208,23 @@ export default function Builder() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
-      className="relative z-10 max-w-7xl mx-auto px-6 py-10"
+      className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 w-full max-w-full overflow-x-clip"
     >
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+      <div className="mb-6 sm:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl border border-pink-500/30 bg-pink-500/10">◇</div>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl border border-pink-500/30 bg-pink-500/10 flex-shrink-0">◇</div>
           <div className="text-left">
-            <h1 className="font-outfit font-800 text-3xl text-gradient-pink" style={{fontWeight:800}}>AI App Builder</h1>
-            <p className="text-white/45 text-sm font-inter">Generate standalone working web applications from Prompts, Ideas, or GitHub Repositories</p>
+            <h1 className="font-outfit font-800 text-2xl sm:text-3xl text-gradient-pink" style={{fontWeight:800}}>AI App Builder</h1>
+            <p className="text-white/45 text-xs sm:text-sm font-inter">Generate standalone working web applications from Prompts, Ideas, or GitHub Repositories</p>
           </div>
         </div>
 
         {/* 3-Option Mode Switcher Bar */}
-        <div className="flex gap-1.5 glass p-1.5 rounded-2xl border border-white/10 flex-wrap">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 glass p-1.5 rounded-2xl border border-white/10 w-full md:w-auto">
           <button
             onClick={() => setMainMode('build')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-outfit text-xs sm:text-sm font-600 transition-all ${
+            className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl font-outfit text-xs sm:text-sm font-600 transition-all ${
               mainMode === 'build'
                 ? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-lg shadow-pink-500/10 font-bold'
                 : 'text-white/50 hover:text-white/80 hover:bg-white/5'
@@ -224,7 +235,7 @@ export default function Builder() {
           </button>
           <button
             onClick={() => setMainMode('discover')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-outfit text-xs sm:text-sm font-600 transition-all ${
+            className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl font-outfit text-xs sm:text-sm font-600 transition-all ${
               mainMode === 'discover'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-lg shadow-cyan-500/10 font-bold'
                 : 'text-white/50 hover:text-white/80 hover:bg-white/5'
@@ -235,7 +246,7 @@ export default function Builder() {
           </button>
           <button
             onClick={() => setMainMode('github')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-outfit text-xs sm:text-sm font-600 transition-all ${
+            className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl font-outfit text-xs sm:text-sm font-600 transition-all ${
               mainMode === 'github'
                 ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-lg shadow-purple-500/10 font-bold'
                 : 'text-white/50 hover:text-white/80 hover:bg-white/5'
@@ -342,32 +353,53 @@ export default function Builder() {
 
                 {activeTab === 'preview' && result.code && (
                   <div className="glass rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-                    <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06] bg-black/40">
+                    <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/[0.06] bg-black/40 flex-wrap">
                       <div className="flex gap-1.5">
                         <div className="w-3 h-3 rounded-full bg-red-500/60" />
                         <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                         <div className="w-3 h-3 rounded-full bg-green-500/60" />
                       </div>
-                      <span className="text-xs text-white/30 font-mono ml-2">preview.html</span>
+                      <span className="text-xs text-white/40 font-mono ml-2">preview.html</span>
                       <span className="tag tag-green text-xs ml-auto">Live Sandbox</span>
+                      <button
+                        onClick={() => openFullscreenPreview(result.code)}
+                        className="btn-ghost text-xs py-1 px-2.5 flex items-center gap-1 text-cyan-300"
+                        title="Open in new window / full screen"
+                      >
+                        <span>↗</span>
+                        <span className="hidden sm:inline">Fullscreen</span>
+                      </button>
                     </div>
                     <iframe
                       srcDoc={result.code}
                       title="Generated App Preview"
                       sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"
                       className="w-full"
-                      style={{ height: 560, border: 'none', background: '#050a12' }}
+                      style={{ height: 'min(560px, 70vh)', minHeight: 380, border: 'none', background: '#050a12' }}
                     />
                   </div>
                 )}
 
                 {activeTab === 'code' && (
                   <div className="glass rounded-2xl overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/[0.06] flex-wrap gap-2">
                       <span className="text-xs text-white/40 font-mono">generated-app.html</span>
-                      <button onClick={() => copyCode(result.code)} className="btn-ghost text-xs py-1.5 px-3">
-                        Copy Code
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleCopyCode(result.code)}
+                          className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1"
+                        >
+                          <span>{copied ? '✓' : '📋'}</span>
+                          <span>{copied ? 'Copied!' : 'Copy Code'}</span>
+                        </button>
+                        <button
+                          onClick={() => handleDownloadCode(result.code, `${result.app_name?.toLowerCase().replace(/\s+/g, '-') || 'generated'}.html`)}
+                          className="btn-nexus text-xs py-1.5 px-3 flex items-center gap-1"
+                        >
+                          <span>⬇</span>
+                          <span className="hidden sm:inline">Download</span>
+                        </button>
+                      </div>
                     </div>
                     <div className="code-block max-h-[520px]">
                       <SyntaxHighlighter
@@ -699,7 +731,7 @@ export default function Builder() {
                 {/* Live Preview */}
                 {activeTab === 'preview' && githubResult.code && (
                   <div className="glass rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-                    <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06] bg-black/40">
+                    <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/[0.06] bg-black/40 flex-wrap">
                       <div className="flex gap-1.5">
                         <div className="w-3 h-3 rounded-full bg-red-500/60" />
                         <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
@@ -707,13 +739,21 @@ export default function Builder() {
                       </div>
                       <span className="text-xs text-white/30 font-mono ml-2">{githubResult.repo_name}-web-app.html</span>
                       <span className="tag tag-purple text-xs ml-auto">Independent Live Implementation</span>
+                      <button
+                        onClick={() => openFullscreenPreview(githubResult.code)}
+                        className="btn-ghost text-xs py-1 px-2.5 flex items-center gap-1 text-cyan-300"
+                        title="Open in new window / full screen"
+                      >
+                        <span>↗</span>
+                        <span className="hidden sm:inline">Fullscreen</span>
+                      </button>
                     </div>
                     <iframe
                       srcDoc={githubResult.code}
                       title="Generated App Preview"
                       sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"
                       className="w-full"
-                      style={{ height: 560, border: 'none', background: '#050a12' }}
+                      style={{ height: 'min(560px, 70vh)', minHeight: 380, border: 'none', background: '#050a12' }}
                     />
                   </div>
                 )}

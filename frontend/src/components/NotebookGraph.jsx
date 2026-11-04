@@ -543,6 +543,121 @@ export default function NotebookGraph({ nodes = [], edges = [], selectedNode, on
     }))
   }
 
+  // ── Touch Interaction Handlers (Mobile Panning, Tapping & Pinch-Zoom) ──
+  const touchStateRef = useRef({
+    initialDist: null,
+    initialZoom: 1,
+    startPos: { x: 0, y: 0 },
+    startTime: 0,
+    hasMoved: false,
+  })
+
+  const handleTouchStart = e => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      touchStateRef.current.startTime = Date.now()
+      touchStateRef.current.hasMoved = false
+      touchStateRef.current.startPos = { x: t.clientX, y: t.clientY }
+
+      if (viewMode === 'tree') {
+        if (e.target.closest('.mindmap-node-card')) return
+        setIsPanning(true)
+        setPanStart({ x: t.clientX - camera.x, y: t.clientY - camera.y })
+      } else {
+        const { worldX, worldY, mx, my } = getCanvasCoords({ clientX: t.clientX, clientY: t.clientY })
+        const hit = simRef.current.nodes.find(n => {
+          const dx = n.x - worldX
+          const dy = n.y - worldY
+          return dx * dx + dy * dy <= (n.radius + 18) * (n.radius + 18)
+        })
+
+        if (hit) {
+          simRef.current.dragNode = hit
+        } else {
+          simRef.current.isPanning = true
+          simRef.current.panStart = { x: mx - simRef.current.camera.x, y: my - simRef.current.camera.y }
+          setIsPanning(true)
+        }
+      }
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      )
+      touchStateRef.current.initialDist = dist
+      touchStateRef.current.initialZoom = camera.k
+      setIsPanning(false)
+    }
+  }
+
+  const handleTouchMove = e => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      const dx = Math.abs(t.clientX - touchStateRef.current.startPos.x)
+      const dy = Math.abs(t.clientY - touchStateRef.current.startPos.y)
+      if (dx > 6 || dy > 6) touchStateRef.current.hasMoved = true
+
+      if (viewMode === 'tree') {
+        if (!isPanning) return
+        setCamera(prev => ({
+          ...prev,
+          x: t.clientX - panStart.x,
+          y: t.clientY - panStart.y,
+        }))
+      } else {
+        const { worldX, worldY, mx, my } = getCanvasCoords({ clientX: t.clientX, clientY: t.clientY })
+        if (simRef.current.dragNode) {
+          simRef.current.dragNode.x = worldX
+          simRef.current.dragNode.y = worldY
+          return
+        }
+        if (simRef.current.isPanning) {
+          setCamera(prev => ({
+            ...prev,
+            x: mx - simRef.current.panStart.x,
+            y: my - simRef.current.panStart.y,
+          }))
+        }
+      }
+    } else if (e.touches.length === 2 && touchStateRef.current.initialDist) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      )
+      const scale = dist / touchStateRef.current.initialDist
+      const newZoom = Math.min(Math.max(touchStateRef.current.initialZoom * scale, 0.25), 3.0)
+      setCamera(prev => ({ ...prev, k: newZoom }))
+    }
+  }
+
+  const handleTouchEnd = e => {
+    const elapsed = Date.now() - touchStateRef.current.startTime
+    const hasMoved = touchStateRef.current.hasMoved
+
+    if (!hasMoved && elapsed < 400 && e.changedTouches.length === 1) {
+      const t = e.changedTouches[0]
+      if (viewMode === 'force') {
+        const { worldX, worldY } = getCanvasCoords({ clientX: t.clientX, clientY: t.clientY })
+        const hit = simRef.current.nodes.find(n => {
+          const dx = n.x - worldX
+          const dy = n.y - worldY
+          return dx * dx + dy * dy <= (n.radius + 18) * (n.radius + 18)
+        })
+        if (hit && onNodeSelect) {
+          onNodeSelect(hit)
+        }
+      }
+    }
+
+    if (simRef.current.dragNode) {
+      if (onNodeSelect && !hasMoved) onNodeSelect(simRef.current.dragNode)
+      simRef.current.dragNode = null
+    }
+    simRef.current.isPanning = false
+    setIsPanning(false)
+    touchStateRef.current.initialDist = null
+  }
+
   if (!nodes.length) return null
 
   return (
@@ -552,6 +667,10 @@ export default function NotebookGraph({ nodes = [], edges = [], selectedNode, on
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       style={{
         width: '100%',
         height: '100%',
@@ -559,6 +678,7 @@ export default function NotebookGraph({ nodes = [], edges = [], selectedNode, on
         background: '#040810',
         overflow: 'hidden',
         userSelect: 'none',
+        touchAction: 'none',
         cursor: isPanning ? 'grabbing' : hoveredNode ? 'pointer' : 'grab',
       }}
     >

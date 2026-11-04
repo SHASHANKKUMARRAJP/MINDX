@@ -330,6 +330,99 @@ export default function KnowledgeGraph({ nodes = [], edges = [] }) {
     }))
   }
 
+  // Touch handlers for mobile pan, tap, pinch-zoom
+  const touchStateRef = useRef({
+    initialDist: null,
+    initialZoom: 1,
+    startPos: { x: 0, y: 0 },
+    startTime: 0,
+    hasMoved: false,
+  })
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      touchStateRef.current.startTime = Date.now()
+      touchStateRef.current.hasMoved = false
+      touchStateRef.current.startPos = { x: t.clientX, y: t.clientY }
+
+      const { worldX, worldY, mx, my } = getCanvasCoords({ clientX: t.clientX, clientY: t.clientY })
+      const hit = simRef.current.nodes.find(n => {
+        const dx = n.x - worldX
+        const dy = n.y - worldY
+        return dx * dx + dy * dy <= (n.radius + 18) * (n.radius + 18)
+      })
+
+      if (hit) {
+        simRef.current.dragNode = hit
+      } else {
+        simRef.current.isPanning = true
+        simRef.current.panStart = { x: mx - simRef.current.camera.x, y: my - simRef.current.camera.y }
+      }
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      )
+      touchStateRef.current.initialDist = dist
+      touchStateRef.current.initialZoom = camera.k
+    }
+  }
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      const dx = Math.abs(t.clientX - touchStateRef.current.startPos.x)
+      const dy = Math.abs(t.clientY - touchStateRef.current.startPos.y)
+      if (dx > 6 || dy > 6) touchStateRef.current.hasMoved = true
+
+      const { worldX, worldY, mx, my } = getCanvasCoords({ clientX: t.clientX, clientY: t.clientY })
+      if (simRef.current.dragNode) {
+        simRef.current.dragNode.x = worldX
+        simRef.current.dragNode.y = worldY
+        return
+      }
+      if (simRef.current.isPanning) {
+        setCamera(prev => ({
+          ...prev,
+          x: mx - simRef.current.panStart.x,
+          y: my - simRef.current.panStart.y,
+        }))
+      }
+    } else if (e.touches.length === 2 && touchStateRef.current.initialDist) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      )
+      const scale = dist / touchStateRef.current.initialDist
+      const newZoom = Math.min(Math.max(touchStateRef.current.initialZoom * scale, 0.25), 3.5)
+      setCamera(prev => ({ ...prev, k: newZoom }))
+    }
+  }
+
+  const handleTouchEnd = (e) => {
+    const elapsed = Date.now() - touchStateRef.current.startTime
+    const hasMoved = touchStateRef.current.hasMoved
+
+    if (!hasMoved && elapsed < 400 && e.changedTouches.length === 1) {
+      const t = e.changedTouches[0]
+      const { worldX, worldY } = getCanvasCoords({ clientX: t.clientX, clientY: t.clientY })
+      const hit = simRef.current.nodes.find(n => {
+        const dx = n.x - worldX
+        const dy = n.y - worldY
+        return dx * dx + dy * dy <= (n.radius + 18) * (n.radius + 18)
+      })
+      if (hit) setSelectedNode(hit)
+    }
+
+    if (simRef.current.dragNode) {
+      if (!hasMoved) setSelectedNode(simRef.current.dragNode)
+      simRef.current.dragNode = null
+    }
+    simRef.current.isPanning = false
+    touchStateRef.current.initialDist = null
+  }
+
   if (!nodes.length) return null
 
   return (
@@ -339,11 +432,16 @@ export default function KnowledgeGraph({ nodes = [], edges = [] }) {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       className="glass rounded-2xl overflow-hidden"
       style={{
-        height: 480, position: 'relative',
+        height: 'min(480px, 60vh)', minHeight: 320, position: 'relative',
         cursor: hoveredNode ? 'pointer' : simRef.current.isPanning ? 'grabbing' : 'grab',
         userSelect: 'none', background: '#040810',
+        touchAction: 'none',
       }}
     >
       <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />

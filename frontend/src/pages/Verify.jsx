@@ -32,6 +32,15 @@ export default function Verify() {
     setResult(null)
   }, [])
 
+  const handleNativeCamera = e => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setFile(f)
+    if (f.type.startsWith('image/')) setPreview(URL.createObjectURL(f))
+    else setPreview(null)
+    setResult(null)
+  }
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop, multiple: false, accept: { 'image/*': [], 'text/*': [] }
   })
@@ -73,23 +82,22 @@ export default function Verify() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
-      className="relative z-10 max-w-6xl mx-auto px-6 py-10"
+      className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 w-full max-w-full overflow-x-clip"
     >
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl border border-green-500/30 bg-green-500/10">◉</div>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl border border-green-500/30 bg-green-500/10 flex-shrink-0">◉</div>
           <div>
-            <h1 className="font-outfit font-800 text-3xl text-gradient-cyan" style={{fontWeight:800}}>Content Verify</h1>
-            <p className="text-white/45 text-sm font-inter">AI-Assisted Content Analysis · Not a definitive judgment tool</p>
+            <h1 className="font-outfit font-800 text-2xl sm:text-3xl text-gradient-cyan" style={{fontWeight:800}}>Content Verify</h1>
+            <p className="text-white/45 text-xs sm:text-sm font-inter">AI-Assisted Content Analysis · Not a definitive judgment tool</p>
           </div>
         </div>
-        <div className="glass rounded-xl p-4 flex items-start gap-3 mt-4">
-          <span className="text-yellow-400 text-lg">⚠</span>
-          <p className="text-yellow-400/80 text-sm font-inter leading-relaxed">
+        <div className="glass rounded-xl p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3 mt-3">
+          <span className="text-yellow-400 text-base sm:text-lg flex-shrink-0 mt-0.5">⚠</span>
+          <p className="text-yellow-400/80 text-xs sm:text-sm font-inter leading-relaxed">
             <strong className="font-outfit">Important disclaimer:</strong> This tool performs AI-assisted analysis only.
             Results cannot definitively determine whether content is authentic, manipulated, or synthetic.
-            Always consult qualified professionals for critical decisions.
           </p>
         </div>
       </div>
@@ -97,6 +105,25 @@ export default function Verify() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Left — Input */}
         <div className="space-y-4">
+          {/* Quick action buttons for mobile & desktop */}
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              id="verify-native-camera"
+              onChange={handleNativeCamera}
+            />
+            <label
+              htmlFor="verify-native-camera"
+              className="btn-ghost flex items-center gap-1.5 text-xs sm:text-sm py-2 px-3 sm:px-4 cursor-pointer"
+            >
+              <span>📸</span> Take Photo
+            </label>
+            <span className="text-white/30 text-xs">or select image/file below</span>
+          </div>
+
           {/* Drop zone */}
           <div {...getRootProps()} className={`drop-zone rounded-2xl overflow-hidden ${isDragActive ? 'active' : ''}`}>
             <input {...getInputProps()} />
@@ -104,16 +131,16 @@ export default function Verify() {
               <div className="relative">
                 <img src={preview} alt="To verify" className="w-full object-cover max-h-64 rounded-2xl" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-2xl">
-                  <span className="text-white font-outfit">Click to replace</span>
+                  <span className="text-white font-outfit text-sm">Click to replace</span>
                 </div>
               </div>
             ) : (
-              <div className="p-12 text-center">
-                <div className="text-5xl mb-3 opacity-20">◉</div>
-                <p className="text-white/40 font-outfit">
+              <div className="p-8 sm:p-12 text-center">
+                <div className="text-4xl sm:text-5xl mb-2 sm:mb-3 opacity-20">◉</div>
+                <p className="text-white/40 font-outfit text-sm sm:text-base">
                   {isDragActive ? 'Drop content here →' : 'Drop an image or file to analyze'}
                 </p>
-                <p className="text-white/25 text-sm mt-1">Images supported for full analysis</p>
+                <p className="text-white/25 text-xs mt-1">Images & text supported for full analysis</p>
               </div>
             )}
           </div>

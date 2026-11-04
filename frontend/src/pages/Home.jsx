@@ -151,8 +151,8 @@ function SlideDeckView({ nodes = [], summary = '', keyThemes = [], files = [] })
   const current = slides[slide] || slides[0]
 
   return (
-    <div style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'radial-gradient(circle at 50% 30%, rgba(124,58,237,0.1) 0%, rgba(4,8,16,0.95) 100%)', color: 'white', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    <div style={{ padding: '16px 12px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'radial-gradient(circle at 50% 30%, rgba(124,58,237,0.1) 0%, rgba(4,8,16,0.95) 100%)', color: 'white', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(0,212,255,0.15)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
             📊 SLIDE DECK VIEW
@@ -176,42 +176,42 @@ function SlideDeckView({ nodes = [], summary = '', keyThemes = [], files = [] })
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
         <AnimatePresence mode="wait">
           <motion.div key={slide} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.04 }} transition={{ duration: 0.3 }}
-            style={{ width: '100%', maxWidth: 780, minHeight: 340, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 20, padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
+            style={{ width: '100%', maxWidth: 780, minHeight: 280, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 20, padding: '20px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', backdropFilter: 'blur(16px)' }}>
             
             {current.type === 'title' && (
               <div style={{ textAlign: 'center', margin: 'auto' }}>
                 <span style={{ padding: '4px 14px', borderRadius: 99, fontSize: 12, background: 'rgba(124,58,237,0.2)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.4)', fontFamily: 'Outfit', fontWeight: 700 }}>{current.subtitle}</span>
-                <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 30, marginTop: 16, marginBottom: 12, background: 'linear-gradient(135deg,#00d4ff,#7c3aed,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{current.title}</h1>
-                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13.5, maxWidth: 600, margin: '0 auto', lineHeight: 1.6 }}>{current.summary}</p>
+                <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 24, marginTop: 14, marginBottom: 10, background: 'linear-gradient(135deg,#00d4ff,#7c3aed,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{current.title}</h1>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, maxWidth: 600, margin: '0 auto', lineHeight: 1.6 }}>{current.summary}</p>
               </div>
             )}
 
             {current.type === 'concept' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 6 }}>
                   <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(0,212,255,0.15)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>{current.category}</span>
                   <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit' }}>Importance: {'★'.repeat(current.importance)}</span>
                 </div>
-                <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 24, color: 'white', marginBottom: 14 }}>{current.title}</h2>
-                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, fontFamily: 'Inter' }}>{current.description}</p>
+                <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 20, color: 'white', marginBottom: 12 }}>{current.title}</h2>
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.65, fontFamily: 'Inter' }}>{current.description}</p>
                 </div>
               </div>
             )}
 
             {current.type === 'summary' && (
               <div>
-                <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 24, color: '#34d399', marginBottom: 12 }}>Summary &amp; Key Themes</h2>
-                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, marginBottom: 16 }}>{current.summary}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 20, color: '#34d399', marginBottom: 10 }}>Summary &amp; Key Themes</h2>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, marginBottom: 14 }}>{current.summary}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {current.keyThemes?.map((t, i) => (
-                    <span key={i} style={{ padding: '5px 12px', borderRadius: 99, fontSize: 12, background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)', fontFamily: 'Outfit', fontWeight: 600 }}>✦ {t}</span>
+                    <span key={i} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)', fontFamily: 'Outfit', fontWeight: 600 }}>✦ {t}</span>
                   ))}
                 </div>
               </div>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12, width: '100%', marginTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12, width: '100%', marginTop: 16 }}>
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'Outfit' }}>MINDX Nexus Slide Deck Generator</span>
               <span style={{ fontSize: 11, color: 'rgba(0,212,255,0.6)', fontFamily: 'Outfit', fontWeight: 600 }}>{slide + 1} / {slides.length}</span>
             </div>
@@ -219,7 +219,7 @@ function SlideDeckView({ nodes = [], summary = '', keyThemes = [], files = [] })
         </AnimatePresence>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
         {slides.map((_, i) => (
           <button key={i} onClick={() => setSlide(i)}
             style={{ width: i === slide ? 24 : 8, height: 8, borderRadius: 4, background: i === slide ? '#00d4ff' : 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }} />
@@ -460,36 +460,36 @@ function QuizView({ nodes = [] }) {
 
 function InfographicView({ nodes = [], summary = '', keyThemes = [], files = [] }) {
   return (
-    <div style={{ padding: 24, overflowY: 'auto', height: '100%', background: '#040810', color: 'white' }}>
+    <div style={{ padding: '16px 12px', overflowY: 'auto', height: '100%', background: '#040810', color: 'white' }}>
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
-        <div style={{ background: 'linear-gradient(135deg,rgba(0,212,255,0.12),rgba(124,58,237,0.18))', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 20, padding: 28, marginBottom: 20, textAlign: 'center' }}>
+        <div style={{ background: 'linear-gradient(135deg,rgba(0,212,255,0.12),rgba(124,58,237,0.18))', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 20, padding: '20px 16px', marginBottom: 16, textAlign: 'center' }}>
           <span style={{ padding: '3px 12px', borderRadius: 99, fontSize: 11, background: 'rgba(0,212,255,0.2)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.4)', fontFamily: 'Outfit', fontWeight: 700 }}>
             🎨 VISUAL INFOGRAPHIC MAP
           </span>
-          <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 28, marginTop: 12, marginBottom: 8 }}>Multimodal Knowledge Infographic</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 600, margin: '0 auto' }}>{summary}</p>
+          <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 22, marginTop: 10, marginBottom: 6 }}>Multimodal Knowledge Infographic</h1>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', maxWidth: 600, margin: '0 auto' }}>{summary}</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20 }}>
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#00d4ff', fontFamily: 'Outfit' }}>{files.length}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Source Files</div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 16, padding: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 900, color: '#00d4ff', fontFamily: 'Outfit' }}>{files.length}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Source Files</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#a78bfa', fontFamily: 'Outfit' }}>{nodes.length}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Mapped Concepts</div>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 900, color: '#a78bfa', fontFamily: 'Outfit' }}>{nodes.length}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Mapped Concepts</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: 18, textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#34d399', fontFamily: 'Outfit' }}>{keyThemes.length}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Core Themes</div>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 900, color: '#34d399', fontFamily: 'Outfit' }}>{keyThemes.length}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit', textTransform: 'uppercase' }}>Core Themes</div>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {nodes.map((n, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 18 }}>
+            <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14 }}>
               <span style={{ fontSize: 10, color: '#00d4ff', fontFamily: 'Outfit', fontWeight: 700, textTransform: 'uppercase' }}>{n.category || 'Concept'}</span>
-              <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 16, color: 'white', marginTop: 4, marginBottom: 8 }}>{n.title}</h3>
+              <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 15, color: 'white', marginTop: 3, marginBottom: 6 }}>{n.title}</h3>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, fontFamily: 'Inter' }}>{n.description}</p>
             </div>
           ))}
@@ -497,8 +497,6 @@ function InfographicView({ nodes = [], summary = '', keyThemes = [], files = [] 
       </div>
     </div>
   )
-}
-
 function DataTableView({ nodes = [] }) {
   const [filter, setFilter] = useState('')
 
@@ -522,10 +520,10 @@ function DataTableView({ nodes = [] }) {
   }
 
   return (
-    <div style={{ padding: 24, overflowY: 'auto', height: '100%', background: '#040810', color: 'white' }}>
+    <div style={{ padding: '16px 12px', overflowY: 'auto', height: '100%', background: '#040810', color: 'white' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)', fontFamily: 'Outfit', fontWeight: 700 }}>
               📋 DATA TABLE
             </span>
@@ -538,23 +536,23 @@ function DataTableView({ nodes = [] }) {
           </button>
         </div>
 
-        <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, textAlign: 'left' }}>
+        <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', minWidth: 500, borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Title</th>
-                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Category</th>
-                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Importance</th>
-                <th style={{ padding: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Description</th>
+                <th style={{ padding: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Title</th>
+                <th style={{ padding: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Category</th>
+                <th style={{ padding: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Importance</th>
+                <th style={{ padding: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit' }}>Description</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((n, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                  <td style={{ padding: 12, fontWeight: 700, color: '#00d4ff', fontFamily: 'Outfit' }}>{n.title}</td>
-                  <td style={{ padding: 12, color: '#a78bfa', fontFamily: 'Outfit' }}>{n.category || 'General'}</td>
-                  <td style={{ padding: 12, color: '#f59e0b' }}>{'★'.repeat(n.importance || 3)}</td>
-                  <td style={{ padding: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontFamily: 'Inter' }}>{n.description}</td>
+                  <td style={{ padding: 10, fontWeight: 700, color: '#00d4ff', fontFamily: 'Outfit', whiteSpace: 'nowrap' }}>{n.title}</td>
+                  <td style={{ padding: 10, color: '#a78bfa', fontFamily: 'Outfit', whiteSpace: 'nowrap' }}>{n.category || 'General'}</td>
+                  <td style={{ padding: 10, color: '#f59e0b', whiteSpace: 'nowrap' }}>{'★'.repeat(n.importance || 3)}</td>
+                  <td style={{ padding: 10, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontFamily: 'Inter', minWidth: 200 }}>{n.description}</td>
                 </tr>
               ))}
             </tbody>
@@ -568,6 +566,7 @@ function DataTableView({ nodes = [] }) {
 // ─── Embedded Notebook Workspace ─────────────────────────────────────────────
 function NotebookWorkspace({ files, onClose }) {
   const [workspaceView, setWorkspaceView] = useState('graph') // 'graph' | 'slides' | 'report' | 'flashcards' | 'quiz' | 'infographic' | 'table'
+  const [mobileTab, setMobileTab] = useState('graph') // 'graph' | 'context'
   const [graphData, setGraphData] = useState(null)
   const [summary, setSummary] = useState('')
   const [keyThemes, setKeyThemes] = useState([])
@@ -649,7 +648,7 @@ function NotebookWorkspace({ files, onClose }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      height: 'calc(100vh - 120px)', minHeight: 580,
+      height: 'calc(100dvh - 130px)', minHeight: 'min(580px, 85vh)',
       borderRadius: 18, overflow: 'hidden',
       border: '1px solid rgba(139,92,246,0.2)',
       background: 'rgba(4,8,16,0.92)',
@@ -709,7 +708,7 @@ function NotebookWorkspace({ files, onClose }) {
       </div>
 
       {/* Studio Mode Toolbar */}
-      <div style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.5)', padding: '6px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', flexShrink: 0 }}>
+      <div className="scrollbar-none" style={{ display: 'flex', gap: 4, background: 'rgba(0,0,0,0.5)', padding: '6px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', WebkitOverflowScrolling: 'touch', flexShrink: 0 }}>
         {[
           { id: 'graph', label: '⬡ Concept Graph' },
           { id: 'slides', label: '📊 Slide Deck' },
@@ -725,7 +724,7 @@ function NotebookWorkspace({ files, onClose }) {
               background: workspaceView === v.id ? 'linear-gradient(135deg,rgba(0,212,255,0.2),rgba(124,58,237,0.25))' : 'transparent',
               border: `1px solid ${workspaceView === v.id ? 'rgba(0,212,255,0.4)' : 'transparent'}`,
               color: workspaceView === v.id ? '#00d4ff' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s'
+              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0,
             }}>
             {v.label}
           </button>
@@ -747,53 +746,89 @@ function NotebookWorkspace({ files, onClose }) {
       {workspaceView === 'table' && <DataTableView nodes={graphData?.nodes} />}
 
       {workspaceView === 'graph' && (
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 280px', overflow: 'hidden', minHeight: 0 }}>
-          <div style={{ position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: 'radial-gradient(ellipse 80% 80% at 50% 50%,rgba(0,212,255,0.02) 0%,transparent 70%)' }}>
-            {!hasGraph && !building && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 30 }}>
-                <div style={{ fontSize: 48, opacity: 0.12 }}>⬡</div>
-                <p style={{ fontFamily: 'Outfit,sans-serif', fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-                  Click <span style={{ color: 'rgba(0,212,255,0.7)' }}>✦ Build Graph</span> to map your knowledge
-                </p>
-              </div>
-            )}
-            {building && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'conic-gradient(from 0deg,#00d4ff,#7c3aed,#00d4ff)', animation: 'nbspin 1.5s linear infinite', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#040810', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>⬡</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 14, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 4 }}>
-                    MINDX is mapping your knowledge…
-                  </p>
-                </div>
-              </div>
-            )}
-            {hasGraph && (
-              <div style={{ flex: 1, position: 'relative' }}>
-                <NotebookGraph
-                  nodes={graphData.nodes}
-                  edges={graphData.edges}
-                  selectedNode={selectedNode}
-                  onNodeSelect={(node) => { setSelectedNode(node); setAiResponse(null) }}
-                />
-              </div>
-            )}
+        <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+          {/* Mobile Tab Switcher for Graph vs AI Context */}
+          <div className="md:hidden flex items-center justify-center p-1.5 bg-black/60 border-b border-white/5 gap-2 flex-shrink-0">
+            <button
+              onClick={() => setMobileTab('graph')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-outfit font-semibold transition-all ${
+                mobileTab === 'graph'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                  : 'text-white/40 hover:text-white/70'
+              }`}
+            >
+              ⬡ Graph View
+            </button>
+            <button
+              onClick={() => setMobileTab('context')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-outfit font-semibold transition-all ${
+                mobileTab === 'context'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
+                  : 'text-white/40 hover:text-white/70'
+              }`}
+            >
+              ✦ AI Context {selectedNode ? `(${selectedNode.title.slice(0, 10)}…)` : ''}
+            </button>
           </div>
 
-          <div style={{ background: 'rgba(4,8,16,0.6)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '8px 13px 6px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontSize: 10, fontFamily: 'Outfit', fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AI Context</p>
-              {selectedNode && <button onClick={() => { setSelectedNode(null); setAiResponse(null) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 15 }}>×</button>}
+          <div className="flex-1 flex flex-col md:grid md:grid-cols-[1fr_280px] overflow-hidden min-h-0">
+            {/* Graph Canvas Panel */}
+            <div className={`relative overflow-hidden border-r border-white/5 flex-col background-radial min-h-[300px] ${
+              mobileTab === 'graph' ? 'flex flex-1' : 'hidden md:flex flex-1'
+            }`} style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%,rgba(0,212,255,0.02) 0%,transparent 70%)' }}>
+              {!hasGraph && !building && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 30 }}>
+                  <div style={{ fontSize: 48, opacity: 0.12 }}>⬡</div>
+                  <p style={{ fontFamily: 'Outfit,sans-serif', fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                    Click <span style={{ color: 'rgba(0,212,255,0.7)' }}>✦ Build Graph</span> to map your knowledge
+                  </p>
+                </div>
+              )}
+              {building && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'conic-gradient(from 0deg,#00d4ff,#7c3aed,#00d4ff)', animation: 'nbspin 1.5s linear infinite', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#040810', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>⬡</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 14, background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 4 }}>
+                      MINDX is mapping your knowledge…
+                    </p>
+                  </div>
+                </div>
+              )}
+              {hasGraph && (
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <NotebookGraph
+                    nodes={graphData.nodes}
+                    edges={graphData.edges}
+                    selectedNode={selectedNode}
+                    onNodeSelect={(node) => {
+                      setSelectedNode(node)
+                      setAiResponse(null)
+                      if (window.innerWidth < 768) setMobileTab('context')
+                    }}
+                  />
+                </div>
+              )}
             </div>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <NotebookContextPanel
-                node={selectedNode}
-                onAction={doAction}
-                aiResponse={aiResponse}
-                aiLoading={aiLoading}
-                onAskAbout={q => { setChatInput(q); setChatOpen(true); chatInputRef.current?.focus() }}
-              />
+
+            {/* AI Context Panel */}
+            <div className={`bg-[#040810]/70 overflow-hidden flex-col ${
+              mobileTab === 'context' ? 'flex flex-1 min-h-[300px]' : 'hidden md:flex'
+            }`}>
+              <div style={{ padding: '8px 13px 6px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontSize: 10, fontFamily: 'Outfit', fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AI Context</p>
+                {selectedNode && <button onClick={() => { setSelectedNode(null); setAiResponse(null) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 15 }}>×</button>}
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <NotebookContextPanel
+                  node={selectedNode}
+                  onAction={doAction}
+                  aiResponse={aiResponse}
+                  aiLoading={aiLoading}
+                  onAskAbout={q => { setChatInput(q); setChatOpen(true); chatInputRef.current?.focus() }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -887,20 +922,20 @@ function GithubAnalysisView({ analysis, knowledgeResult }) {
   return (
     <div className="space-y-6 text-left">
       {/* Header card with repo name, links, badges */}
-      <div className="glass rounded-2xl p-6 border-gradient">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-2xl">
+      <div className="glass rounded-2xl p-4 sm:p-6 border-gradient">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
               🐙
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-outfit font-800 text-2xl text-white/90">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-outfit font-800 text-lg sm:text-2xl text-white/90 break-all">
                   {analysis.owner} / <span className="text-gradient-cyan">{analysis.repo_name}</span>
                 </h2>
-                <span className="tag tag-cyan">Public Repo</span>
+                <span className="tag tag-cyan text-[10px] sm:text-xs">Public Repo</span>
               </div>
-              <a href={analysis.url} target="_blank" rel="noreferrer" className="text-xs text-cyan-400/80 hover:underline font-outfit">
+              <a href={analysis.url} target="_blank" rel="noreferrer" className="text-xs text-cyan-400/80 hover:underline font-outfit break-all">
                 {analysis.url} ↗
               </a>
             </div>
@@ -908,20 +943,22 @@ function GithubAnalysisView({ analysis, knowledgeResult }) {
         </div>
 
         {/* Complexity Badge Rationale */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08]">
-          <span className="text-xs font-outfit text-white/40 uppercase tracking-wider">Complexity:</span>
-          <span className="px-3 py-1 rounded-full text-xs font-outfit font-700" style={{ background: `${complexityColor}20`, color: complexityColor, border: `1px solid ${complexityColor}40` }}>
-            {complexityLevel} Complexity
-          </span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs font-outfit text-white/40 uppercase tracking-wider">Complexity:</span>
+            <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-outfit font-700" style={{ background: `${complexityColor}20`, color: complexityColor, border: `1px solid ${complexityColor}40` }}>
+              {complexityLevel} Complexity
+            </span>
+          </div>
           <span className="text-xs text-white/60 font-inter">{analysis.complexity_score?.explanation}</span>
         </div>
       </div>
 
       {/* Tabs selector */}
-      <div className="flex gap-2 p-1 glass rounded-xl bg-black/40 border border-white/5">
+      <div className="grid grid-cols-2 sm:flex gap-1.5 p-1 glass rounded-xl bg-black/40 border border-white/5">
         <button
           onClick={() => setResultTab('overview')}
-          className={`flex-1 py-2 px-3 rounded-lg text-xs font-outfit font-600 transition-all ${
+          className={`py-2 px-2.5 sm:px-3 rounded-lg text-xs font-outfit font-600 transition-all text-center ${
             resultTab === 'overview'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
               : 'text-white/40 hover:text-white/70'
@@ -932,7 +969,7 @@ function GithubAnalysisView({ analysis, knowledgeResult }) {
         {knowledgeResult && (
           <button
             onClick={() => setResultTab('graph')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-outfit font-600 transition-all ${
+            className={`py-2 px-2.5 sm:px-3 rounded-lg text-xs font-outfit font-600 transition-all text-center ${
               resultTab === 'graph'
                 ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                 : 'text-white/40 hover:text-white/70'
@@ -944,7 +981,7 @@ function GithubAnalysisView({ analysis, knowledgeResult }) {
         {knowledgeResult && (
           <button
             onClick={() => setResultTab('gaps')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-outfit font-600 transition-all ${
+            className={`py-2 px-2.5 sm:px-3 rounded-lg text-xs font-outfit font-600 transition-all text-center ${
               resultTab === 'gaps'
                 ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                 : 'text-white/40 hover:text-white/70'
@@ -1342,40 +1379,40 @@ export default function Home() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.4 }}
-      className="relative z-10 max-w-6xl mx-auto px-6 py-12"
+      className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-12 w-full max-w-full overflow-x-clip"
     >
       {/* Hero */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-8 sm:mb-10">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}
-          className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-6">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="text-xs sm:text-sm font-outfit font-semibold tracking-wide bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
-            Multimodal Intelligence & Digital Experience
+          className="inline-flex items-center gap-2 glass px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-4 sm:mb-6 max-w-full">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
+          <span className="text-[11px] sm:text-xs md:text-sm font-outfit font-semibold tracking-normal sm:tracking-wide bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-400 bg-clip-text text-transparent break-words">
+            Multimodal Intelligence &amp; Digital Experience
           </span>
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-          className="font-outfit font-900 text-6xl md:text-7xl lg:text-8xl leading-none mb-4" style={{ fontWeight: 900 }}>
+          className="font-outfit font-900 text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-none mb-3 sm:mb-4 tracking-tight" style={{ fontWeight: 900 }}>
           <span className="text-gradient-full">Give MINDX</span>
           <br />
           <span className="text-white/90">anything.</span>
         </motion.h1>
 
         <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-white/50 text-xl max-w-2xl mx-auto font-inter leading-relaxed">
+          className="text-white/50 text-sm sm:text-lg md:text-xl max-w-2xl mx-auto font-inter leading-relaxed px-2">
           Multimodal Workspace Studio. Drop text files, images, PDFs, code files, or public GitHub URLs below for instant AI analysis and interactive knowledge extraction.
         </motion.p>
       </div>
 
       {/* Main input card with Mode Switcher */}
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
-        className="glass rounded-2xl p-6 mb-8 border-gradient">
+        className="glass rounded-2xl p-4 sm:p-6 mb-8 border-gradient">
 
         {/* Mode Selector Tabs */}
-        <div className="flex gap-2 p-1.5 glass rounded-xl mb-6 bg-black/30 border border-white/5">
+        <div className="flex flex-col sm:flex-row gap-2 p-1.5 glass rounded-xl mb-6 bg-black/30 border border-white/5">
           <button
             onClick={() => { setActiveTab('general'); setError(null) }}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-outfit text-sm font-600 transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-lg font-outfit text-xs sm:text-sm font-600 transition-all flex items-center justify-center gap-2 ${
               activeTab === 'general'
                 ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/10'
                 : 'text-white/50 hover:text-white/80'
@@ -1386,7 +1423,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => { setActiveTab('github'); setError(null) }}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-outfit text-sm font-600 transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-lg font-outfit text-xs sm:text-sm font-600 transition-all flex items-center justify-center gap-2 ${
               activeTab === 'github'
                 ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/10'
                 : 'text-white/50 hover:text-white/80'
@@ -1401,7 +1438,7 @@ export default function Home() {
         {activeTab === 'general' && (
           <div>
             {/* Dropzone */}
-            <div {...getRootProps()} className={`drop-zone p-8 mb-4 text-center transition-all ${isDragActive ? 'active' : ''}`}>
+            <div {...getRootProps()} className={`drop-zone p-4 sm:p-8 mb-4 text-center transition-all ${isDragActive ? 'active' : ''}`}>
               <input {...getInputProps()} />
               {files.length > 0 ? (
                 <div>
@@ -1445,28 +1482,21 @@ export default function Home() {
                   transition={{ duration: 0.28 }}
                   style={{ overflow: 'hidden', marginBottom: 16 }}
                 >
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
-                    padding: '13px 16px', borderRadius: 13,
-                    background: 'linear-gradient(135deg,rgba(0,212,255,0.05),rgba(124,58,237,0.07))',
-                    border: '1px solid rgba(0,212,255,0.18)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg,rgba(0,212,255,0.15),rgba(124,58,237,0.2))', border: '1px solid rgba(0,212,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>⬡</div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/5 to-purple-500/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/25 border border-cyan-500/30 flex items-center justify-center text-lg flex-shrink-0">⬡</div>
                       <div>
-                        <p style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: 13.5, color: 'rgba(255,255,255,0.9)', marginBottom: 2 }}>Open as Nexus Notebook</p>
-                        <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter' }}>
+                        <p className="font-outfit font-700 text-sm text-white/90">Open as Nexus Notebook</p>
+                        <p className="text-xs text-white/50 font-inter">
                           MINDX maps your {files.length} file{files.length !== 1 ? 's' : ''} into an interactive knowledge graph
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setNotebookMode(true)}
+                      className="btn-nexus py-2 px-4 text-xs sm:text-sm font-outfit font-bold flex-shrink-0 w-full sm:w-auto"
                       style={{
-                        padding: '8px 18px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
                         background: 'linear-gradient(135deg,#00d4ff,#7c3aed)',
-                        border: 'none', color: 'white', fontFamily: 'Outfit,sans-serif',
-                        cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
                         boxShadow: '0 4px 18px rgba(0,212,255,0.22)',
                       }}>
                       ⬡ Open Notebook →
@@ -1492,7 +1522,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-2 mb-5">
               {EXAMPLES.map(ex => (
                 <button key={ex} onClick={() => setPrompt(ex)}
-                  className="text-xs glass px-3 py-1.5 rounded-full text-white/50 hover:text-white/80 hover:border-cyan-400/30 transition-all font-outfit border border-white/[0.06] truncate max-w-[220px]"
+                  className="text-xs glass px-3 py-1.5 rounded-full text-white/50 hover:text-white/80 hover:border-cyan-400/30 transition-all font-outfit border border-white/[0.06] truncate max-w-full sm:max-w-[240px]"
                   title={ex}>
                   {ex}
                 </button>

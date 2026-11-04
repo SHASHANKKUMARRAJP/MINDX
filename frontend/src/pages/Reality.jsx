@@ -25,6 +25,7 @@ export default function Reality() {
 
   const videoRef = useRef(null)
   const streamRef = useRef(null)
+  const nativeCameraInputRef = useRef(null)
 
   const onDrop = useCallback(accepted => {
     const f = accepted[0]
@@ -35,6 +36,15 @@ export default function Reality() {
     setHoveredIdx(null)
   }, [])
 
+  const handleNativeCamera = e => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+    setResult(null)
+    setHoveredIdx(null)
+  }
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop, multiple: false, accept: { 'image/*': [] }
   })
@@ -42,11 +52,13 @@ export default function Reality() {
   const startCamera = async () => {
     setCameraOpen(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }
+      })
       streamRef.current = stream
       if (videoRef.current) videoRef.current.srcObject = stream
     } catch {
-      setError('Camera access denied')
+      setError('Live camera stream not supported or denied. Please use "Take Photo" or upload an image.')
       setCameraOpen(false)
     }
   }
@@ -95,15 +107,15 @@ export default function Reality() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
-      className="relative z-10 max-w-7xl mx-auto px-6 py-8"
+      className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 w-full max-w-full overflow-x-clip"
     >
       {/* Page Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl border border-cyan-500/30 bg-cyan-500/10">◎</div>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl border border-cyan-500/30 bg-cyan-500/10 flex-shrink-0">◎</div>
           <div>
-            <h1 className="font-outfit font-800 text-3xl text-gradient-cyan" style={{fontWeight:800}}>Reality Scanner</h1>
-            <p className="text-white/45 text-sm font-inter">Cloud Vision Intelligence · Object Bounding Boxes · Micro-Feature & Label Extraction</p>
+            <h1 className="font-outfit font-800 text-2xl sm:text-3xl text-gradient-cyan" style={{fontWeight:800}}>Reality Scanner</h1>
+            <p className="text-white/45 text-xs sm:text-sm font-inter">Cloud Vision Intelligence · Object Bounding Boxes · Micro-Feature &amp; Label Extraction</p>
           </div>
         </div>
       </div>
@@ -112,11 +124,31 @@ export default function Reality() {
         {/* Left Column: Image Upload & Bounding Box Canvas (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
           {!cameraOpen && (
-            <div className="flex gap-2">
-              <button onClick={startCamera} className="btn-ghost flex items-center gap-2 text-sm">
-                <span>📷</span> Use Camera
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Native Mobile Camera Button */}
+              <input
+                ref={nativeCameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleNativeCamera}
+              />
+              <button
+                type="button"
+                onClick={() => nativeCameraInputRef.current?.click()}
+                className="btn-ghost flex items-center gap-1.5 text-xs sm:text-sm py-2 px-3 sm:px-4"
+              >
+                <span>📸</span> Take Photo
               </button>
-              <span className="text-white/20 self-center text-sm">or drag image below</span>
+              <button
+                type="button"
+                onClick={startCamera}
+                className="btn-ghost flex items-center gap-1.5 text-xs sm:text-sm py-2 px-3 sm:px-4"
+              >
+                <span>🎥</span> Live Camera
+              </button>
+              <span className="text-white/30 text-xs hidden sm:inline">or drop image below</span>
             </div>
           )}
 
@@ -165,10 +197,15 @@ export default function Reality() {
                       return (
                         <div
                           key={i}
-                          className={`absolute border-2 transition-all rounded pointer-events-none ${
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setHoveredIdx(hoveredIdx === i ? null : i)
+                            setActiveTab('objects')
+                          }}
+                          className={`absolute border-2 transition-all rounded cursor-pointer pointer-events-auto ${
                             isHovered
                               ? 'border-emerald-400 bg-emerald-500/25 shadow-lg shadow-emerald-500/60 z-30 scale-[1.01]'
-                              : 'border-emerald-500/70 bg-emerald-500/10 z-20'
+                              : 'border-emerald-500/70 bg-emerald-500/10 z-20 hover:border-emerald-400'
                           }`}
                           style={{
                             top: `${ymin}%`,
@@ -177,7 +214,11 @@ export default function Reality() {
                             width: `${w}%`,
                           }}
                         >
-                          <span className="absolute -top-5 left-0 bg-emerald-950/90 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 whitespace-nowrap font-mono font-semibold shadow z-40">
+                          <span
+                            className={`absolute bg-emerald-950/95 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 whitespace-nowrap font-mono font-semibold shadow z-40 ${
+                              ymin < 10 ? 'top-1 left-1' : '-top-5 left-0'
+                            }`}
+                          >
                             {obj.name} ({obj.score || 90}%)
                           </span>
                         </div>
@@ -237,12 +278,12 @@ export default function Reality() {
         <div className="lg:col-span-7">
           <div className="glass rounded-2xl overflow-hidden border border-white/10 min-h-[480px]">
             {/* Top Navigation Tabs (Objects, Labels, Properties, Safe Search) */}
-            <div className="flex border-b border-white/10 bg-white/[0.02] overflow-x-auto">
+            <div className="flex border-b border-white/10 bg-white/[0.02] overflow-x-auto scrollbar-none px-1">
               {TABS.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-5 py-3.5 text-sm font-outfit font-500 transition-all border-b-2 whitespace-nowrap ${
+                  className={`px-3.5 sm:px-5 py-2.5 sm:py-3.5 text-xs sm:text-sm font-outfit font-500 transition-all border-b-2 whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
                       ? 'border-cyan-400 text-cyan-300 bg-cyan-500/10 font-semibold'
                       : 'border-transparent text-white/50 hover:text-white/80 hover:bg-white/[0.03]'
@@ -250,20 +291,20 @@ export default function Reality() {
                 >
                   {tab.label}
                   {tab.id === 'objects' && result?.objects?.length ? (
-                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">{result.objects.length}</span>
+                    <span className="ml-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">{result.objects.length}</span>
                   ) : null}
                   {tab.id === 'labels' && result?.labels?.length ? (
-                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">{result.labels.length}</span>
+                    <span className="ml-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">{result.labels.length}</span>
                   ) : null}
                   {tab.id === 'features' && result?.micro_features?.length ? (
-                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{result.micro_features.length}</span>
+                    <span className="ml-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{result.micro_features.length}</span>
                   ) : null}
                 </button>
               ))}
             </div>
 
             {/* Tab Contents Panel */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {loading && (
                 <div className="space-y-4 py-8">
                   {[1, 2, 3, 4, 5].map(i => (
@@ -301,6 +342,7 @@ export default function Reality() {
                           return (
                             <div
                               key={i}
+                              onClick={() => setHoveredIdx(hoveredIdx === i ? null : i)}
                               onMouseEnter={() => setHoveredIdx(i)}
                               onMouseLeave={() => setHoveredIdx(null)}
                               className={`p-3 rounded-xl transition-all cursor-pointer border ${
@@ -399,7 +441,7 @@ export default function Reality() {
                   {activeTab === 'properties' && (
                     <div className="space-y-5">
                       {/* Image Metadata Badges */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                         <div className="glass p-3 rounded-xl text-center">
                           <div className="text-xs text-white/40 font-outfit uppercase">Scene Type</div>
                           <div className="text-sm font-semibold text-cyan-300 mt-1">{result.detected_scene_type || 'General'}</div>
@@ -445,8 +487,8 @@ export default function Reality() {
                   {/* TAB 5: SAFE SEARCH */}
                   {activeTab === 'safesearch' && (
                     <div className="space-y-4">
-                      <p className="text-xs font-outfit text-white/40 uppercase tracking-widest mb-2">Content Moderation & Safety Metrics</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <p className="text-xs font-outfit text-white/40 uppercase tracking-widest mb-2">Content Moderation &amp; Safety Metrics</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                         {Object.entries(result.safe_search || { adult: 'Very Unlikely', spoof: 'Very Unlikely', medical: 'Very Unlikely', violence: 'Very Unlikely', racy: 'Very Unlikely' }).map(([key, val]) => (
                           <div key={key} className="glass p-3.5 rounded-xl flex items-center justify-between">
                             <span className="text-sm font-outfit capitalize text-white/80">{key}</span>

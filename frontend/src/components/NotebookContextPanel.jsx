@@ -202,12 +202,12 @@ export default function NotebookContextPanel({ node, onAction, aiResponse, aiLoa
                 title={AI_ACTIONS.find(a => a.id === id)?.desc}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '7px 10px', borderRadius: 9, cursor: aiLoading ? 'not-allowed' : 'pointer',
+                  padding: '8px 10px', minHeight: 40, borderRadius: 9, cursor: aiLoading ? 'not-allowed' : 'pointer',
                   background: isActive ? `${color}18` : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${isActive ? color + '40' : 'rgba(255,255,255,0.07)'}`,
                   color: isActive ? color : 'rgba(255,255,255,0.65)',
                   fontFamily: 'Outfit, sans-serif', fontWeight: 500, fontSize: 12,
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.2s ease', touchAction: 'manipulation',
                   gridColumn: id === 'missing' ? 'span 2' : 'auto',
                   opacity: aiLoading && !isActive ? 0.5 : 1,
                 }}
