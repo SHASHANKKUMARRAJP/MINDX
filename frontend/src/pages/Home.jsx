@@ -497,6 +497,8 @@ function InfographicView({ nodes = [], summary = '', keyThemes = [], files = [] 
       </div>
     </div>
   )
+}
+
 function DataTableView({ nodes = [] }) {
   const [filter, setFilter] = useState('')
 
