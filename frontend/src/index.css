@@ -249,6 +249,9 @@ body {
   background: rgba(255, 255, 255, 0.02);
   transition: all 0.3s ease;
   cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .drop-zone:hover, .drop-zone.active {

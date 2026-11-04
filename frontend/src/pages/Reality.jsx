@@ -22,6 +22,7 @@ export default function Reality() {
   const [activeTab, setActiveTab] = useState('objects')
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [cameraOpen, setCameraOpen] = useState(false)
+  const [imageDimensions, setImageDimensions] = useState(null)
 
   const videoRef = useRef(null)
   const streamRef = useRef(null)
@@ -35,6 +36,7 @@ export default function Reality() {
     if (!f) return
     setFile(f)
     setPreview(URL.createObjectURL(f))
+    setImageDimensions(null)
     setResult(null)
     setHoveredIdx(null)
   }, [])
@@ -44,6 +46,7 @@ export default function Reality() {
     if (!f) return
     setFile(f)
     setPreview(URL.createObjectURL(f))
+    setImageDimensions(null)
     setResult(null)
     setHoveredIdx(null)
   }
@@ -53,6 +56,7 @@ export default function Reality() {
     if (!f) return
     setFile(f)
     setPreview(URL.createObjectURL(f))
+    setImageDimensions(null)
     setResult(null)
     setHoveredIdx(null)
   }
@@ -121,6 +125,7 @@ export default function Reality() {
       const f = new File([blob], `${type}-sample.jpg`, { type: 'image/jpeg' })
       setFile(f)
       setPreview(URL.createObjectURL(f))
+      setImageDimensions(null)
       setResult(null)
       setHoveredIdx(null)
       if (type === 'portrait') {
@@ -158,6 +163,7 @@ export default function Reality() {
       const f = new File([blob], 'capture.jpg', { type: 'image/jpeg' })
       setFile(f)
       setPreview(URL.createObjectURL(f))
+      setImageDimensions(null)
       stopCamera()
       setResult(null)
       setHoveredIdx(null)
@@ -209,9 +215,9 @@ export default function Reality() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-6 items-start">
+      <div className="grid lg:grid-cols-12 gap-6 items-start w-full min-w-0 max-w-full">
         {/* Left Column: Image Upload & Bounding Box Canvas (5 Cols) */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-4 w-full min-w-0 max-w-full">
           {/* Hidden file inputs for Camera and Photo Gallery */}
           <input
             ref={nativeCameraInputRef}
@@ -236,13 +242,13 @@ export default function Reality() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="glass rounded-2xl overflow-hidden border border-cyan-500/30"
+                className="glass rounded-2xl overflow-hidden border border-cyan-500/30 w-full min-w-0 max-w-full"
               >
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-full rounded-t-2xl max-h-72 object-cover"
+                  className="w-full rounded-t-2xl max-h-72 object-cover block"
                 />
                 <div className="flex gap-2 p-3 bg-black/60 backdrop-blur-md">
                   <button onClick={capturePhoto} className="btn-nexus flex-1 py-3 text-sm font-semibold">📸 Capture Photo</button>
@@ -254,9 +260,9 @@ export default function Reality() {
 
           {/* Viewfinder Studio Card */}
           {!cameraOpen && (
-            <div className="glass rounded-2xl p-3 sm:p-4 border border-white/10 space-y-3">
+            <div className="glass rounded-2xl p-3 sm:p-4 border border-white/10 space-y-3 w-full min-w-0 max-w-full overflow-hidden">
               {/* Top Quick Actions Bar */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 w-full">
                 <button
                   type="button"
                   onClick={() => nativeCameraInputRef.current?.click()}
@@ -279,24 +285,40 @@ export default function Reality() {
               <div
                 ref={previewContainerRef}
                 {...getRootProps()}
-                className={`drop-zone rounded-xl overflow-hidden transition-all relative border border-dashed ${
+                className={`drop-zone rounded-xl overflow-hidden transition-all relative border border-dashed w-full min-w-0 max-w-full ${
                   isDragActive ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/15 bg-black/40'
                 }`}
               >
                 <input {...getInputProps()} />
 
                 {preview ? (
-                  <div className="relative group bg-black/80 min-h-[240px] sm:min-h-[280px] p-2 text-center flex items-center justify-center">
-                    <div className="relative inline-block overflow-hidden rounded-xl max-w-full">
-                      <img src={preview} alt="Preview" className="block max-h-[380px] sm:max-h-[440px] w-auto h-auto max-w-full mx-auto rounded-xl object-contain" />
+                  <div className="relative group bg-black/90 p-1.5 sm:p-2 text-center flex items-center justify-center w-full min-w-0 max-w-full overflow-hidden rounded-xl min-h-[220px] max-h-[52vh] sm:max-h-[460px]">
+                    {/* Constrained Image Frame tightly locking aspect ratio & boundaries */}
+                    <div
+                      className="relative max-w-full max-h-[52vh] sm:max-h-[460px] flex items-center justify-center overflow-hidden rounded-lg mx-auto"
+                      style={{
+                        aspectRatio: imageDimensions ? `${imageDimensions.naturalWidth} / ${imageDimensions.naturalHeight}` : 'auto',
+                      }}
+                    >
+                      <img
+                        src={preview}
+                        alt="Uploaded Preview"
+                        onLoad={(e) => {
+                          setImageDimensions({
+                            naturalWidth: e.currentTarget.naturalWidth,
+                            naturalHeight: e.currentTarget.naturalHeight
+                          })
+                        }}
+                        className="w-full h-full max-w-full max-h-[52vh] sm:max-h-[460px] object-contain rounded-lg block select-none pointer-events-none"
+                      />
 
                       {/* Laser Scanning Animation Line */}
                       {loading && (
-                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-lg z-30">
                           <motion.div
                             animate={{ top: ['0%', '100%', '0%'] }}
                             transition={{ repeat: Infinity, duration: 2.2, ease: 'linear' }}
-                            className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#00d4ff] z-30"
+                            className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#00d4ff]"
                           />
                         </div>
                       )}
@@ -308,6 +330,9 @@ export default function Reality() {
                         const isHovered = hoveredIdx === i
                         const h = Math.max(ymax - ymin, 2)
                         const w = Math.max(xmax - xmin, 2)
+                        const isNearRight = xmin > 65
+                        const isNearTop = ymin < 12
+
                         return (
                           <div
                             key={i}
@@ -329,8 +354,10 @@ export default function Reality() {
                             }}
                           >
                             <span
-                              className={`absolute bg-emerald-950/95 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 whitespace-nowrap font-mono font-semibold shadow z-40 ${
-                                ymin < 10 ? 'top-1 left-1' : '-top-5 left-0'
+                              className={`absolute bg-emerald-950/95 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 font-mono font-semibold shadow z-40 max-w-[130px] sm:max-w-none truncate ${
+                                isNearTop ? 'top-1' : '-top-5'
+                              } ${
+                                isNearRight ? 'right-0' : 'left-0'
                               }`}
                             >
                               {obj.name} ({obj.score || 90}%)
@@ -341,14 +368,14 @@ export default function Reality() {
                     </div>
 
                     {/* Change photo floating overlay */}
-                    <div className="absolute top-3 right-3 z-30">
+                    <div className="absolute top-2.5 right-2.5 z-40">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
                           galleryInputRef.current?.click()
                         }}
-                        className="glass px-2.5 py-1 text-[11px] font-outfit text-white/90 rounded-full border border-white/20 hover:border-cyan-400 shadow-lg flex items-center gap-1 backdrop-blur-md"
+                        className="bg-black/75 hover:bg-black/90 text-white/90 text-[11px] font-outfit px-2.5 py-1 rounded-full border border-white/20 hover:border-cyan-400 shadow-lg flex items-center gap-1 backdrop-blur-md transition-all active:scale-95"
                       >
                         <span>↺</span> Change
                       </button>
@@ -463,7 +490,7 @@ export default function Reality() {
 
         {/* Right Column: Google Cloud Vision Style Tabbed Inspector (7 Cols) */}
         {/* On Mobile: Hidden when no image is scanned to prevent giant empty box; Visible when results exist or loading */}
-        <div ref={resultsContainerRef} className={`lg:col-span-7 ${!result && !loading ? 'hidden lg:block' : 'block'}`}>
+        <div ref={resultsContainerRef} className={`lg:col-span-7 w-full min-w-0 max-w-full overflow-hidden ${!result && !loading ? 'hidden lg:block' : 'block'}`}>
           <div className="glass rounded-2xl overflow-hidden border border-white/10 min-h-[380px] sm:min-h-[480px]">
             {/* Top Navigation Tabs (Objects, Labels, Properties, Safe Search) */}
             <div className="flex border-b border-white/10 bg-white/[0.02] overflow-x-auto scrollbar-none px-1">
