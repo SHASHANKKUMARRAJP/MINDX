@@ -26,6 +26,9 @@ export default function Reality() {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const nativeCameraInputRef = useRef(null)
+  const galleryInputRef = useRef(null)
+  const previewContainerRef = useRef(null)
+  const resultsContainerRef = useRef(null)
 
   const onDrop = useCallback(accepted => {
     const f = accepted[0]
@@ -43,6 +46,89 @@ export default function Reality() {
     setPreview(URL.createObjectURL(f))
     setResult(null)
     setHoveredIdx(null)
+  }
+
+  const handleGalleryUpload = e => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+    setResult(null)
+    setHoveredIdx(null)
+  }
+
+  // Instant demo sample image generator for zero-friction mobile testing
+  const loadSampleImage = (type = 'portrait') => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 720
+    canvas.height = 540
+    const ctx = canvas.getContext('2d')
+    if (type === 'portrait') {
+      const grad = ctx.createLinearGradient(0, 0, 720, 540)
+      grad.addColorStop(0, '#0c1a2f')
+      grad.addColorStop(0.6, '#182d4d')
+      grad.addColorStop(1, '#081220')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, 720, 540)
+      // Silhouette / Portrait Face
+      ctx.fillStyle = '#fce7f3'
+      ctx.beginPath()
+      ctx.ellipse(360, 240, 110, 140, 0, 0, Math.PI * 2)
+      ctx.fill()
+      // Bindi
+      ctx.fillStyle = '#ef4444'
+      ctx.beginPath()
+      ctx.arc(360, 195, 7, 0, Math.PI * 2)
+      ctx.fill()
+      // Nose Ring / Stud
+      ctx.fillStyle = '#fbbf24'
+      ctx.beginPath()
+      ctx.arc(375, 250, 5, 0, Math.PI * 2)
+      ctx.fill()
+      // Gold Earring
+      ctx.fillStyle = '#f59e0b'
+      ctx.beginPath()
+      ctx.arc(245, 260, 14, 0, Math.PI * 2)
+      ctx.fill()
+      // Text
+      ctx.font = 'bold 20px Outfit, sans-serif'
+      ctx.fillStyle = '#38bdf8'
+      ctx.textAlign = 'center'
+      ctx.fillText('Sample Portrait with Jewelry & Micro-Features', 360, 470)
+    } else {
+      const grad = ctx.createLinearGradient(0, 0, 720, 540)
+      grad.addColorStop(0, '#090d16')
+      grad.addColorStop(1, '#1e293b')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, 720, 540)
+      // Vehicle Body
+      ctx.fillStyle = '#06b6d4'
+      ctx.roundRect ? ctx.roundRect(160, 260, 400, 120, 24) : ctx.fillRect(160, 260, 400, 120)
+      ctx.fill()
+      // Wheels
+      ctx.fillStyle = '#334155'
+      ctx.beginPath()
+      ctx.arc(240, 390, 35, 0, Math.PI * 2)
+      ctx.arc(480, 390, 35, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.font = 'bold 20px Outfit, sans-serif'
+      ctx.fillStyle = '#a855f7'
+      ctx.textAlign = 'center'
+      ctx.fillText('Sample Vehicle & Urban Scene', 360, 180)
+    }
+
+    canvas.toBlob(blob => {
+      const f = new File([blob], `${type}-sample.jpg`, { type: 'image/jpeg' })
+      setFile(f)
+      setPreview(URL.createObjectURL(f))
+      setResult(null)
+      setHoveredIdx(null)
+      if (type === 'portrait') {
+        setPrompt('Detect face, nose ring, earring, bindi, jewelry and micro features in detail.')
+      } else {
+        setPrompt('Detect vehicle, wheels, body parts, and urban context.')
+      }
+    }, 'image/jpeg', 0.92)
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -94,6 +180,9 @@ export default function Reality() {
         prompt || 'Detect all objects, nose ring, earring, bindi, clothing, car, wheels, and micro features in detail.'
       )
       setResult(data)
+      setTimeout(() => {
+        resultsContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 200)
     } catch (err) {
       setError(err.response?.data?.detail || 'Scan failed. Check your API key.')
     } finally {
@@ -123,34 +212,22 @@ export default function Reality() {
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Image Upload & Bounding Box Canvas (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
-          {!cameraOpen && (
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Native Mobile Camera Button */}
-              <input
-                ref={nativeCameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={handleNativeCamera}
-              />
-              <button
-                type="button"
-                onClick={() => nativeCameraInputRef.current?.click()}
-                className="btn-ghost flex items-center gap-1.5 text-xs sm:text-sm py-2 px-3 sm:px-4"
-              >
-                <span>📸</span> Take Photo
-              </button>
-              <button
-                type="button"
-                onClick={startCamera}
-                className="btn-ghost flex items-center gap-1.5 text-xs sm:text-sm py-2 px-3 sm:px-4"
-              >
-                <span>🎥</span> Live Camera
-              </button>
-              <span className="text-white/30 text-xs hidden sm:inline">or drop image below</span>
-            </div>
-          )}
+          {/* Hidden file inputs for Camera and Photo Gallery */}
+          <input
+            ref={nativeCameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleNativeCamera}
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleGalleryUpload}
+          />
 
           {/* Camera Feed */}
           <AnimatePresence>
@@ -159,7 +236,7 @@ export default function Reality() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="glass rounded-2xl overflow-hidden"
+                className="glass rounded-2xl overflow-hidden border border-cyan-500/30"
               >
                 <video
                   ref={videoRef}
@@ -167,116 +244,227 @@ export default function Reality() {
                   playsInline
                   className="w-full rounded-t-2xl max-h-72 object-cover"
                 />
-                <div className="flex gap-2 p-3">
-                  <button onClick={capturePhoto} className="btn-nexus flex-1 py-2.5 text-sm">📸 Capture</button>
+                <div className="flex gap-2 p-3 bg-black/60 backdrop-blur-md">
+                  <button onClick={capturePhoto} className="btn-nexus flex-1 py-3 text-sm font-semibold">📸 Capture Photo</button>
                   <button onClick={stopCamera} className="btn-ghost px-4 text-sm">Cancel</button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Upload Drop Zone & Image with Bounding Box Overlays */}
+          {/* Viewfinder Studio Card */}
           {!cameraOpen && (
-            <div
-              {...getRootProps()}
-              className={`drop-zone rounded-2xl overflow-hidden transition-all relative border border-white/10 ${isDragActive ? 'active' : ''}`}
-            >
-              <input {...getInputProps()} />
-              {preview ? (
-                <div className="relative group bg-black/80 min-h-[260px] p-2 text-center flex items-center justify-center">
-                  <div className="relative inline-block overflow-hidden rounded-xl max-w-full">
-                    <img src={preview} alt="Preview" className="block max-h-[440px] w-auto h-auto max-w-full mx-auto rounded-xl" />
+            <div className="glass rounded-2xl p-3 sm:p-4 border border-white/10 space-y-3">
+              {/* Top Quick Actions Bar */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => nativeCameraInputRef.current?.click()}
+                  className="btn-nexus py-3 px-3 text-xs sm:text-sm flex items-center justify-center gap-1.5 font-semibold"
+                >
+                  <span className="text-base">📸</span>
+                  <span>Take Photo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="btn-ghost py-3 px-3 text-xs sm:text-sm flex items-center justify-center gap-1.5 font-semibold border border-white/15 hover:border-cyan-400/50"
+                >
+                  <span className="text-base">🖼️</span>
+                  <span>Photo Library</span>
+                </button>
+              </div>
 
-                    {/* Bounding Boxes — Neon Green overlay (Google Cloud Vision style) */}
-                    {result?.objects?.map((obj, i) => {
-                      if (!obj.bounding_box) return null
-                      const [ymin, xmin, ymax, xmax] = obj.bounding_box
-                      const isHovered = hoveredIdx === i
-                      const h = Math.max(ymax - ymin, 2)
-                      const w = Math.max(xmax - xmin, 2)
-                      return (
-                        <div
-                          key={i}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setHoveredIdx(hoveredIdx === i ? null : i)
-                            setActiveTab('objects')
-                          }}
-                          className={`absolute border-2 transition-all rounded cursor-pointer pointer-events-auto ${
-                            isHovered
-                              ? 'border-emerald-400 bg-emerald-500/25 shadow-lg shadow-emerald-500/60 z-30 scale-[1.01]'
-                              : 'border-emerald-500/70 bg-emerald-500/10 z-20 hover:border-emerald-400'
-                          }`}
-                          style={{
-                            top: `${ymin}%`,
-                            left: `${xmin}%`,
-                            height: `${h}%`,
-                            width: `${w}%`,
-                          }}
-                        >
-                          <span
-                            className={`absolute bg-emerald-950/95 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 whitespace-nowrap font-mono font-semibold shadow z-40 ${
-                              ymin < 10 ? 'top-1 left-1' : '-top-5 left-0'
-                            }`}
-                          >
-                            {obj.name} ({obj.score || 90}%)
-                          </span>
+              {/* Viewfinder / Image Canvas */}
+              <div
+                ref={previewContainerRef}
+                {...getRootProps()}
+                className={`drop-zone rounded-xl overflow-hidden transition-all relative border border-dashed ${
+                  isDragActive ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/15 bg-black/40'
+                }`}
+              >
+                <input {...getInputProps()} />
+
+                {preview ? (
+                  <div className="relative group bg-black/80 min-h-[240px] sm:min-h-[280px] p-2 text-center flex items-center justify-center">
+                    <div className="relative inline-block overflow-hidden rounded-xl max-w-full">
+                      <img src={preview} alt="Preview" className="block max-h-[380px] sm:max-h-[440px] w-auto h-auto max-w-full mx-auto rounded-xl object-contain" />
+
+                      {/* Laser Scanning Animation Line */}
+                      {loading && (
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+                          <motion.div
+                            animate={{ top: ['0%', '100%', '0%'] }}
+                            transition={{ repeat: Infinity, duration: 2.2, ease: 'linear' }}
+                            className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#00d4ff] z-30"
+                          />
                         </div>
-                      )
-                    })}
-                  </div>
+                      )}
 
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none">
-                    <span className="text-white font-outfit text-sm bg-black/70 px-4 py-2 rounded-xl border border-white/20">Click or drop to replace image</span>
+                      {/* Bounding Boxes — Neon Green overlay (Google Cloud Vision style) */}
+                      {result?.objects?.map((obj, i) => {
+                        if (!obj.bounding_box) return null
+                        const [ymin, xmin, ymax, xmax] = obj.bounding_box
+                        const isHovered = hoveredIdx === i
+                        const h = Math.max(ymax - ymin, 2)
+                        const w = Math.max(xmax - xmin, 2)
+                        return (
+                          <div
+                            key={i}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setHoveredIdx(hoveredIdx === i ? null : i)
+                              setActiveTab('objects')
+                            }}
+                            className={`absolute border-2 transition-all rounded cursor-pointer pointer-events-auto ${
+                              isHovered
+                                ? 'border-emerald-400 bg-emerald-500/30 shadow-lg shadow-emerald-500/70 z-30 scale-[1.01]'
+                                : 'border-emerald-500/70 bg-emerald-500/10 z-20 hover:border-emerald-400'
+                            }`}
+                            style={{
+                              top: `${ymin}%`,
+                              left: `${xmin}%`,
+                              height: `${h}%`,
+                              width: `${w}%`,
+                            }}
+                          >
+                            <span
+                              className={`absolute bg-emerald-950/95 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 whitespace-nowrap font-mono font-semibold shadow z-40 ${
+                                ymin < 10 ? 'top-1 left-1' : '-top-5 left-0'
+                              }`}
+                            >
+                              {obj.name} ({obj.score || 90}%)
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Change photo floating overlay */}
+                    <div className="absolute top-3 right-3 z-30">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          galleryInputRef.current?.click()
+                        }}
+                        className="glass px-2.5 py-1 text-[11px] font-outfit text-white/90 rounded-full border border-white/20 hover:border-cyan-400 shadow-lg flex items-center gap-1 backdrop-blur-md"
+                      >
+                        <span>↺</span> Change
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <div className="py-8 sm:py-12 px-4 text-center cursor-pointer">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-2xl">
+                      ◎
+                    </div>
+                    <p className="text-white/80 font-outfit text-sm sm:text-base font-medium">Tap to select or drop an image</p>
+                    <p className="text-white/40 text-xs mt-1 max-w-xs mx-auto">Detects objects, jewelry, clothing, vehicles, micro-features &amp; OCR text</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Instant 1-Tap Sample Presets & AR Stream Toggle */}
+              <div className="pt-1 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                <span className="text-white/40 text-[11px]">Quick Samples:</span>
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => loadSampleImage('portrait')}
+                    className="tag text-[10px] sm:text-xs py-1 px-2 text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+                  >
+                    ⚡ Portrait &amp; Jewelry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loadSampleImage('vehicle')}
+                    className="tag text-[10px] sm:text-xs py-1 px-2 text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
+                  >
+                    ⚡ Vehicle &amp; Urban
+                  </button>
                 </div>
-              ) : (
-                <div className="p-12 text-center">
-                  <div className="text-5xl mb-3 opacity-20">◎</div>
-                  <p className="text-white/50 font-outfit text-base">Drop an image here to analyze</p>
-                  <p className="text-white/30 text-xs mt-1">Detects objects, nose ring, earrings, bindi, clothing, car parts, labels & micro features</p>
-                </div>
-              )}
+              </div>
+
+              {/* Live WebRTC Camera Stream Toggle */}
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="text-white/40 hover:text-white/80 text-[11px] inline-flex items-center gap-1 transition-colors"
+                >
+                  <span>🎥</span> Or open in-browser Live Camera stream
+                </button>
+              </div>
             </div>
           )}
 
           {/* Question / Prompt Input */}
-          <div>
-            <label className="text-xs font-outfit text-white/40 uppercase tracking-widest block mb-1">Optional Focus Prompt</label>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-outfit text-white/50 uppercase tracking-wider block">Optional Focus Prompt</label>
+              {prompt && (
+                <button
+                  type="button"
+                  onClick={() => setPrompt('')}
+                  className="text-[10px] text-white/40 hover:text-white/70"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <input
               className="nexus-input text-sm"
               placeholder={`e.g. "Identify nose ring, earrings, bindi & jewelry in detail"`}
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
             />
+            {/* Quick Prompt Filter Chips */}
+            <div className="flex flex-wrap gap-1 pt-1">
+              {['Nose ring & Jewelry', 'Vehicles & Wheels', 'Text & OCR', 'Clothing & Style'].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setPrompt(`Detect ${tag.toLowerCase()} in high detail.`)}
+                  className="text-[10px] text-white/40 hover:text-cyan-300 bg-white/[0.03] hover:bg-white/[0.08] px-2 py-0.5 rounded-md border border-white/5 transition-colors"
+                >
+                  +{tag}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Scan Action Button */}
           <button
             onClick={handleScan}
             disabled={!file || loading}
-            className="btn-nexus w-full py-3.5 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`btn-nexus w-full py-3.5 sm:py-4 flex items-center justify-center gap-2 font-semibold text-sm sm:text-base ${
+              !file ? 'opacity-50 cursor-not-allowed bg-white/10' : 'glow-cyan'
+            }`}
           >
             {loading ? (
               <>
                 <div className="flex gap-1"><span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/></div>
                 <span>Scanning with MINDX Vision Engine...</span>
               </>
+            ) : !file ? (
+              <><span>📸</span><span>Select or Take Photo to Scan</span></>
             ) : (
-              <><span>◎</span><span>Run Reality Scan</span></>
+              <><span>✦</span><span>Run Reality Scan</span></>
             )}
           </button>
 
           {error && (
-            <div className="glass rounded-xl p-4 border border-red-500/30 bg-red-500/10 text-red-400 text-sm">
+            <div className="glass rounded-xl p-3.5 border border-red-500/30 bg-red-500/10 text-red-400 text-xs sm:text-sm">
               ⚠ {error}
             </div>
           )}
         </div>
 
         {/* Right Column: Google Cloud Vision Style Tabbed Inspector (7 Cols) */}
-        <div className="lg:col-span-7">
-          <div className="glass rounded-2xl overflow-hidden border border-white/10 min-h-[480px]">
+        {/* On Mobile: Hidden when no image is scanned to prevent giant empty box; Visible when results exist or loading */}
+        <div ref={resultsContainerRef} className={`lg:col-span-7 ${!result && !loading ? 'hidden lg:block' : 'block'}`}>
+          <div className="glass rounded-2xl overflow-hidden border border-white/10 min-h-[380px] sm:min-h-[480px]">
             {/* Top Navigation Tabs (Objects, Labels, Properties, Safe Search) */}
             <div className="flex border-b border-white/10 bg-white/[0.02] overflow-x-auto scrollbar-none px-1">
               {TABS.map(tab => (
@@ -342,7 +530,12 @@ export default function Reality() {
                           return (
                             <div
                               key={i}
-                              onClick={() => setHoveredIdx(hoveredIdx === i ? null : i)}
+                              onClick={() => {
+                                setHoveredIdx(hoveredIdx === i ? null : i)
+                                if (window.innerWidth < 1024) {
+                                  previewContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                                }
+                              }}
                               onMouseEnter={() => setHoveredIdx(i)}
                               onMouseLeave={() => setHoveredIdx(null)}
                               className={`p-3 rounded-xl transition-all cursor-pointer border ${

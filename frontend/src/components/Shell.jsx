@@ -17,15 +17,15 @@ export default function Shell({ children }) {
         Skip to main content
       </a>
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 glass border-b border-white/[0.06] w-full" role="banner">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-3">
+      {/* Header - Flush Edge-to-Edge with Safe Area Insets for Mobile Notches */}
+      <header className="sticky top-0 z-40 bg-[#050a12]/92 backdrop-blur-2xl border-b border-white/[0.08] w-full safe-pt" role="banner">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-3">
           {/* Logo */}
           <NavLink to="/" aria-label="MINDX Nexus Homepage" className="flex items-center gap-2 group flex-shrink-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-xs sm:text-sm font-bold glow-cyan" aria-hidden="true">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-xs sm:text-sm font-bold glow-cyan shadow-lg shadow-cyan-500/20" aria-hidden="true">
               ✦
             </div>
-            <span className="font-outfit font-700 text-base sm:text-lg tracking-tight">
+            <span className="font-outfit font-bold text-base sm:text-lg tracking-tight">
               <span className="text-gradient-cyan">MINDX</span>
               <span className="text-white/90"> Nexus</span>
             </span>
@@ -50,12 +50,12 @@ export default function Shell({ children }) {
           </nav>
 
           {/* Status badge - Responsive */}
-          <div className="flex items-center gap-1.5 sm:gap-2 glass px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full flex-shrink-0" aria-label="System status: Online">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] flex-shrink-0" aria-label="System status: Online">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
             <span className="text-[11px] sm:text-xs font-outfit font-semibold tracking-wide bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               <span className="hidden md:inline">Multimodal Intelligence &amp; Digital Experience</span>
               <span className="hidden sm:inline md:hidden">AI Nexus Online</span>
-              <span className="sm:hidden font-mono font-bold">LIVE</span>
+              <span className="sm:hidden font-mono font-bold tracking-wider">LIVE</span>
             </span>
           </div>
         </div>

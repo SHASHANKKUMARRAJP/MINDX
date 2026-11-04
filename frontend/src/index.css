@@ -560,11 +560,10 @@ img, video, canvas, iframe, svg {
     transform: scale(0.97);
   }
 
-  /* Mobile card padding */
+  /* Mobile card styling */
   .glass {
     backdrop-filter: blur(14px) !important;
     -webkit-backdrop-filter: blur(14px) !important;
-    border-radius: 14px !important;
   }
 
   /* Touch controls optimization: minimum target size for interactive controls */
